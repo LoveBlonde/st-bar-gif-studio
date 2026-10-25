@@ -1,0 +1,8 @@
+numpy>=2.0.0
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+scipy>=1.11.0
+mss>=9.0.0
+customtkinter>=5.2.0
+scikit-image>=0.22.0
+matplotlib>=3.8.0
