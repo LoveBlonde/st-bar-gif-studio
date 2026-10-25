@@ -8,7 +8,7 @@
   <a href="README.es.md">🇪🇸 Español</a>
 </p>
 
-> **次世代 $O(N)$ 時空間 LZW-RDO `.gif` (ST-GIF v3) ＆ ブロック整列 `.webp` (ST-BAR v4) 圧縮最適化エンジン + 透過フレーム画面録画スタジオ**
+> **次世代線形時間 $O(N)$ 時空間 LZW-RDO `.gif` (ST-GIF v3) ＆ ブロック整列 `.webp` (ST-BAR v4) 圧縮最適化エンジン + 透過フレーム画面録画スタジオ**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -20,11 +20,11 @@
 
 従来のアニメーション画像エンコーダ（**FFmpeg (`palettegen + paletteuse`)**、**Pillow**、**`libwebp` (`WebPAnimEncoder`)** など）は、隣接フレーム間の単純なピクセル差分（$I_t$ vs $I_{t-1}$）と誤差拡散ディザリング（Floyd-Steinberg / Sierra）に依存しています。微細なセンサーノイズや圧縮アーティファクト（$\pm 1 \sim 3$ RGB）を含む実際のゲーム録画や画面キャプチャに適用すると、以下の3つの致命的な非効率が発生します。
 
-1. **時間軸ボイリング (Temporal Boiling) と二重デルタペナルティ:** ランダムな微小ノイズが `A → B → A` の振動を引き起こし、サブフレームのバ운ディングボックスが画面全体（100%）に膨張して背景のちらつき（フリッカー）を生じさせます。
+1. **時間軸ボイリング (Temporal Boiling) と二重デルタペナルティ:** ランダムな微小ノイズが `A → B → A` の振動を引き起こし、サブフレームのバウンディングボックスが画面全体（100%）に膨張して背景のちらつき（フリッカー）を生じさせます。
 2. **ディザパターンの位相反転とボロノイ境界のトグル:** 誤差拡散ディザリングがフレームごとにチェッカーボードパターンの位相を反転させるため、`.gif` の LZW 辞書ランレングス（Run-Length）が破壊され、ファイルサイズが **5倍〜25倍** に肥大化します。
 3. **DCT マクロブロックの断片化 (Animated WebP):** ピクセル単位で透明な穴（$\alpha=0$）を開けると、VP8 の $16\times 16$ マクロブロック内部に人工的な高周波ステップエッジが生成され、AC 係数のエントロピーが急増します。
 
-**`st-bar-gif-studio`** は、完全な $O(N)$ シングルパス時空間圧縮アルゴリズムである **ST-GIF v3**（`.gif` 用）および **ST-BAR v4**（`.webp` 用）を独自実装し、直感的に使える **クリック透過型の画面録画フレーム＆連続品質スライダー (`1 ~ 100`) 搭載 GUI スタジオ** を提供します。
+**`st-bar-gif-studio`** は、線形時間 $O(N)$（フレームあたり定数パス）で動作する時空間圧縮アルゴリズムである **ST-GIF v3**（`.gif` 用）および **ST-BAR v4**（`.webp` 用）を独自実装し、直感的に使える **クリック透過型の画面録画フレーム＆連続品質スライダー (`1 ~ 100`) 搭載 GUI スタジオ** を提供します。
 
 ---
 
@@ -70,15 +70,50 @@
 
 ---
 
-## 🧠 コア数理モデルとアルゴリズム構造
+## 🧠 コア数理モデルとアルゴリズム構造（コード検証済み仕様）
 
-### 1. 符号付き空間ボックス残差 (Signed Spatial Box Residual) ＆ 3-Tap スパイクゲート ($O(N)$)
-平均ゼロのセンサー・圧縮ノイズ $\eta \sim \mathcal{N}(0, \sigma^2)$ は、$5\times 5$ 空間ウィンドウ（$N=25$）内で**符号を保持したまま合算**すると互いに相殺され（$\sigma_{\text{mean}} = \sigma / 5$）、一方で実際の物体の移動は局所ピクセルを同一方向へ一貫してシフトさせます。ボックスフィルタの線形性（$\text{Box}(C_t - A_{t-1}) = \text{Box}(C_t) - \text{Box}(A_{t-1})$）を活用し、純粋な 8-bit SIMD（`cv2.boxFilter` + `cv2.absdiff`）のみで 1フレームあたり $< 1\text{ ms}$ で真の動きを分離します。
+```mermaid
+flowchart TD
+    A["入力フレーム列 I_0 ... I_{T-1}"] --> B["Stage 1: L1-Cache 純 uint8 3-Tap 時間軸シグマフィルタ (t-1, t, t+1)"]
+    B --> C{"出力フォーマット?"}
+    C -- "GIF89a (ST-GIF v3)" --> D["異方性 1x3 水平スムージング + 5x5 符号付きボックス残差 & アンカーロック"]
+    D --> E["動き重み付き知覚パレット + 64x64x64 3D KD-Tree LUT & 画面固定 4x4 Bayer ディザ"]
+    E --> F["4段階階層ブロックアンカー LZW 統合 + 閉ループ・ボロノイヒステリシス & スペックル除去"]
+    F --> G["全単射・非インターレース LZW ストリーム抽出器 & GIF89a マルチプレクサ"]
+    C -- "Animated WebP (ST-BAR v4)" --> H["5x5 符号付きボックス残差 + 3-Tap スパイクゲート & パッチワーク・アンカーロック"]
+    H --> I["3-Way 占有率ベース・サブフレームルータ: Near-Lossless VP8L (<22% px) vs NO_BLEND RGB (>=60% blk) vs 16x16 ブロック Alpha BLEND"]
+    I --> J["Direct RIFF WEBP (VP8X + ANIM + ANMF) ビットストリームアセンブラ"]
+```
 
-### 2. 閉ループ・ボロノイヒステリシス ＆ 4段階 Prefix-Doubling LZW 走査線統合 (`ST-GIF v3`)
-デコーダ画面上に現在表示されている正確な RGB キャンバス $\hat{C}_{t-1}(x, y) = \text{Palette}[\hat{P}_{t-1}(x, y)]$ を追跡し、以下の式に従ってパレットインデックス $\hat{p}_t(x, y)$ を決定します。
+### 1. 符号付き空間ボックス残差 ＆ パッチワーク・アンカー追跡 (`stabilize_pure_u8_fast`)
+平均ゼロのセンサー・圧縮ノイズ $\eta \sim \mathcal{N}(0, \sigma^2)$ は、$5\times 5$ 空間ウィンドウ（$N=25$）内で**符号を保持したまま合算**すると互いに相殺され（$\sigma_{\text{mean}} = \sigma / 5$）、一方で実際の物体の移動は局所ピクセルを同一方向へ一貫してシフトさせます。直前のフレーム（$t-1$）と単純比較するのではなく、動きが検出された領域のみ更新される**永続アンカーフレーム $A$** と、動きマスク（`dilated_u8`）部分にのみ `box_clean[t]` を上書きする**パッチワーク・アンカーボックス平均 $B_{\text{anchor}}$**（`cv2.copyTo(box_clean[t], dilated_u8, box_anchor)`）を追跡します：
 
-$$\hat{p}_t(x, y) = \begin{cases} 255 \text{ (TRANSPARENT)} & \text{if } \|\tilde{I}_t(x,y) - \hat{C}_{t-1}(x,y)\|_\infty \le \tau_{\text{keep}} \text{ or } e_{\text{old}} - e_{\text{new}} \le \delta_{\text{gain}} \\ \hat{p}_t(x - 2^k, y) & \text{if } \|\tilde{I}_t(x,y) - \text{Palette}[\hat{p}_t(x - 2^k, y)]\|_\infty \le \delta_{\text{LZW}} \quad (k \in \{0,1,2,3\}) \\ \text{LUT}_{64^3}(\tilde{I}_t(x,y)) & \text{otherwise} \end{cases}$$
+$$\text{Box}(C_t - A) = \text{Box}(C_t) - \text{Box}(A) \approx \text{Box}(C_t) - B_{\text{anchor}}$$
+
+これに $t+1$ フレームを参照する 3-Tap スパイクゲートと $3\times 3$ 近傍フィルタリングを組み合わせ、純粋な 8-bit SIMD（`cv2.boxFilter` + `cv2.absdiff`）のみで真の動きを分離します。（`.gif` エンコード時は `anisotropic_smooth=True` により条件付き $1\times 3$ 水平スムージングが先行適用されます。）
+
+### 2. ST-GIF v3 3段階量子化および閉ループ LZW-RDO パイプライン (`st_gif_codec.py`)
+
+#### Step 2a. 画面絶対座標固定・条件付き $4\times 4$ Bayer ディザリング (`quantize_frame_with_locked_bayer`)
+フレームごとのディザ位相反転を防ぐため、画面絶対座標に固定された $4\times 4$ Bayer 行列 $B_{4\times 4}(x\bmod 4, y\bmod 4)$ を使用し、**$Q > 50$（$s_{\text{dither}} > 0$）かつ基本量子化誤差が $7$ を超えるピクセルにのみ**適用します：
+
+$$p_0(x,y) = \text{LUT}_{64^3}(\tilde{I}_t(x,y)), \qquad p_{\text{raw}}(x,y) = \begin{cases} \text{LUT}_{64^3}\!\left(\text{clip}\big(\tilde{I}_t(x,y) + s_{\text{dither}}\cdot B_{4\times 4}(x\bmod 4,\, y\bmod 4)\big)\right) & \text{if } Q > 50 \;\land\; \|\tilde{I}_t(x,y) - \text{Pal}[p_0(x,y)]\|_\infty > 7 \\ p_0(x,y) & \text{otherwise} \end{cases}$$
+
+#### Step 2b. 4段階階層型ブロックアンカー LZW 走査線統合 (`coalesce_lzw_horizontal_runs`)
+$\hat{p}_t \leftarrow p_{\text{raw}}$ から開始し、$2 \to 4 \to 8$ サイズのブロック固定アンカーと奇数境界の結合を行う **4段階（$k = 1 \to 2 \to 3 \to 4$）を順次（カスケード）適用**します（最大参照距離は 4 ピクセル）：
+
+$$a_k(x) = \begin{cases} x - 1 & k=1,\; x \equiv 1 \pmod 2 \\ 4\lfloor x/4 \rfloor + 1 & k=2,\; x \bmod 4 \in \{2, 3\} \\ 8\lfloor x/8 \rfloor + 3 & k=3,\; x \bmod 8 \in \{4, 5, 6, 7\} \\ x - 1 & k=4,\; x \equiv 0 \pmod 2,\; x \ge 2 \end{cases}$$
+
+$$\hat{p}_t(x, y) \leftarrow \hat{p}_t(a_k(x), y) \quad \text{if } \|\tilde{I}_t(x, y) - \text{Pal}[\hat{p}_t(a_k(x), y)]\|_\infty \le \delta_{\text{LZW}}$$
+
+#### Step 2c. 閉ループ・ボロノイヒステリシス ＆ 1–2px 孤立点除去 (`encode_st_gif`)
+デコーダ画面上に表示されているキャンバス色 $\hat{C}_{t-1}(x, y) = \text{Pal}[\hat{P}_{\text{canvas}}(x, y)]$ に対し、$e_{\text{old}} = \|\tilde{I}_t(x,y) - \hat{C}_{t-1}(x,y)\|_\infty$、$e_{\text{new}} = \|\tilde{I}_t(x,y) - \text{Pal}[\hat{p}_t(x,y)]\|_\infty$ とするとき、以下の **4条件のいずれかを満たせば** キャンバスを維持（`255 TRANSPARENT`）します：
+
+$$\text{keep}(x,y) = \neg M_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \hat{P}_{\text{canvas}}(x,y)\big) \;\lor\; \big(e_{\text{old}} \le \tau_{\text{keep}}\big) \;\lor\; \big(e_{\text{old}} - e_{\text{new}} \le \delta_{\text{gain}}\big)$$
+
+さらに LZW の透明ランレングスを最大化するため、2段階の後処理を行います：
+1. **$3\times 3$ スペックル除去：** $3\times 3$ 範囲内の更新ピクセルが $2$ 個以下かつ $e_{\text{old}} \le 2\tau_{\text{keep}} + 2$ の孤立点を透明（`keep = True`）に戻します。
+2. **水平 1px / 2px 孤立更新の抑制：** 両側を透明（`keep`）に挟まれた水平 $1\text{px}$（`iso_1px`）および $2\text{px}$（`iso_2px`）の孤立更新（$e_{\text{old}} \le 2\tau_{\text{keep}} (+2)$）を透明に戻します。
 
 ---
 

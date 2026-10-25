@@ -8,7 +8,7 @@
   <a href="README.es.md"><b>🇪🇸 Español</b></a>
 </p>
 
-> **Motor de compresión espacio-temporal $O(N)$ de próxima generación para `.gif` (ST-GIF v3) y `.webp` animado (ST-BAR v4) + Estudio de grabación de pantalla transparente**
+> **Motor de compresión espacio-temporal en tiempo lineal $O(N)$ de próxima generación para `.gif` (ST-GIF v3) y `.webp` animado (ST-BAR v4) + Estudio de grabación de pantalla transparente**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -24,7 +24,7 @@ Los codificadores de imágenes animadas estándar —como **FFmpeg (`palettegen 
 2. **Inversión de Fase de Dithering y Alternancia en Fronteras de Voronoi:** El tramado por difusión de error invierte el patrón de tablero de ajedrez entre fotogramas, destruyendo las secuencias LZW (Run-Length) en archivos `.gif` e inflando el tamaño entre **5× y 25×**.
 3. **Fragmentación de Macrobloques DCT (en Animated WebP):** Perforar píxeles transparentes individuales ($\alpha=0$) crea bordes escalonados de alta frecuencia dentro de los macrobloques VP8 de $16\times 16$, disparando la entropía de los coeficientes AC.
 
-**`st-bar-gif-studio`** introduce dos algoritmos de compresión espacio-temporales de una sola pasada estrictamente $O(N)$ —**ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`)— integrados en un **Estudio GUI con grabador de pantalla transparente y control deslizante continuo de calidad (`1 ~ 100`)**.
+**`st-bar-gif-studio`** introduce dos algoritmos de compresión espacio-temporales en tiempo lineal $O(N)$ (pasadas constantes por fotograma) —**ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`)— integrados en un **Estudio GUI con grabador de pantalla transparente y control deslizante continuo de calidad (`1 ~ 100`)**.
 
 ---
 
@@ -70,15 +70,50 @@ Probado con capturas reales de alta resolución de videojuegos y pantalla frente
 
 ---
 
-## 🧠 Arquitectura Algorítmica Principal
+## 🧠 Arquitectura Algorítmica Principal (Especificación Verificada en Código)
 
-### 1. Residuo Espacial de Caja con Signo (Signed Spatial Box Residual) y Compuerta Temporal de 3 Toques ($O(N)$)
-El ruido de media cero $\eta \sim \mathcal{N}(0, \sigma^2)$ se cancela dentro de una ventana espacial de $5\times 5$ ($N=25$) cuando se suma **conservando el signo** ($\sigma_{\text{mean}} = \sigma / 5$), mientras que el movimiento real desplaza los píxeles locales de forma coherente en la misma dirección. Aprovechando la linealidad del filtro de caja ($\text{Box}(C_t - A_{t-1}) = \text{Box}(C_t) - \text{Box}(A_{t-1})$), ST-BAR evalúa el movimiento coherente usando SIMD puro de 8 bits (`cv2.boxFilter` + `cv2.absdiff`) en $< 1\text{ ms}$ por fotograma.
+```mermaid
+flowchart TD
+    A["Secuencia de Fotogramas I_0 ... I_{T-1}"] --> B["Stage 1: Filtro Sigma Temporal 3-Tap uint8 en Caché L1 (t-1, t, t+1)"]
+    B --> C{"¿Formato de Salida?"}
+    C -- "GIF89a (ST-GIF v3)" --> D["Suavizado Horizontal Anisotrópico 1x3 + Residuo de Caja 5x5 con Signo y Bloqueo de Ancla"]
+    D --> E["Paleta Perceptual Ponderada por Movimiento + LUT KD-Tree 3D 64x64x64 y Dither Bayer 4x4 Fijo"]
+    E --> F["Fusión LZW Jerárquica de 4 Etapas + Histéresis de Voronoi en Lazo Cerrado y Limpieza de Puntos"]
+    F --> G["Extractor LZW Biyectivo No Entrelazado y Multiplexor GIF89a"]
+    C -- "Animated WebP (ST-BAR v4)" --> H["Residuo de Caja 5x5 con Signo + Compuerta de Picos 3-Tap y Ancla Incremental"]
+    H --> I["Enrutador de Subfotogramas de 3 Vías por Ocupación: VP8L (<22% px) vs NO_BLEND RGB (>=60% blk) vs BLEND 16x16"]
+    I --> J["Ensamblador Directo de Bitstream RIFF WEBP (VP8X + ANIM + ANMF)"]
+```
 
-### 2. Histéresis de Voronoi en Lazo Cerrado y Fusión de Líneas LZW (`ST-GIF v3`)
-En lugar de cuantización en lazo abierto, `ST-GIF v3` rastrea el color RGB exacto $\hat{C}_{t-1}(x, y) = \text{Palette}[\hat{P}_{t-1}(x, y)]$ mostrado actualmente en el lienzo del decodificador y selecciona el índice de paleta $\hat{p}_t(x, y)$ mediante:
+### 1. Residuo Espacial de Caja con Signo y Seguimiento Incremental del Ancla (`stabilize_pure_u8_fast`)
+El ruido de media cero $\eta \sim \mathcal{N}(0, \sigma^2)$ se cancela dentro de una ventana espacial de $5\times 5$ ($N=25$) cuando se suma **conservando el signo** ($\sigma_{\text{mean}} = \sigma / 5$), mientras que el movimiento real desplaza los píxeles locales de forma coherente en la misma dirección. En lugar de comparar con el fotograma inmediatamente anterior ($t-1$), el algoritmo mantiene un **Lienzo Ancla Persistente $A$** y una **Media de Caja del Ancla $B_{\text{anchor}}$** actualizada por parches (`cv2.copyTo(box_clean[t], dilated_u8, box_anchor)`) solo en las regiones con movimiento activo:
 
-$$\hat{p}_t(x, y) = \begin{cases} 255 \text{ (TRANSPARENT)} & \text{if } \|\tilde{I}_t(x,y) - \hat{C}_{t-1}(x,y)\|_\infty \le \tau_{\text{keep}} \text{ or } e_{\text{old}} - e_{\text{new}} \le \delta_{\text{gain}} \\ \hat{p}_t(x - 2^k, y) & \text{if } \|\tilde{I}_t(x,y) - \text{Palette}[\hat{p}_t(x - 2^k, y)]\|_\infty \le \delta_{\text{LZW}} \quad (k \in \{0,1,2,3\}) \\ \text{LUT}_{64^3}(\tilde{I}_t(x,y)) & \text{otherwise} \end{cases}$$
+$$\text{Box}(C_t - A) = \text{Box}(C_t) - \text{Box}(A) \approx \text{Box}(C_t) - B_{\text{anchor}}$$
+
+Combinado con una compuerta temporal de 3 toques ($t+1$) y filtrado de vecinos $3\times 3$, el movimiento coherente se aísla usando SIMD puro de 8 bits (`cv2.boxFilter` + `cv2.absdiff`). Para `.gif` (`anisotropic_smooth=True`), se aplica previamente un suavizado horizontal condicional de $1\times 3$.
+
+### 2. Pipeline de Cuantización en 3 Pasos y LZW-RDO en Lazo Cerrado (`st_gif_codec.py`)
+
+#### Paso 2a. Dithering Bayer $4\times 4$ Condicional Anclado a Pantalla (`quantize_frame_with_locked_bayer`)
+Para evitar la inversión de fase del tramado entre fotogramas, se utiliza una matriz Bayer $B_{4\times 4}(x\bmod 4, y\bmod 4)$ fija a las coordenadas de pantalla, activada **solo cuando $Q > 50$ ($s_{\text{dither}} > 0$) y el error de cuantización base supera $7$**:
+
+$$p_0(x,y) = \text{LUT}_{64^3}(\tilde{I}_t(x,y)), \qquad p_{\text{raw}}(x,y) = \begin{cases} \text{LUT}_{64^3}\!\left(\text{clip}\big(\tilde{I}_t(x,y) + s_{\text{dither}}\cdot B_{4\times 4}(x\bmod 4,\, y\bmod 4)\big)\right) & \text{if } Q > 50 \;\land\; \|\tilde{I}_t(x,y) - \text{Pal}[p_0(x,y)]\|_\infty > 7 \\ p_0(x,y) & \text{otherwise} \end{cases}$$
+
+#### Paso 2b. Fusión Jerárquica de Líneas LZW en 4 Etapas (`coalesce_lzw_horizontal_runs`)
+Partiendo de $\hat{p}_t \leftarrow p_{\text{raw}}$, las líneas horizontales se fusionan **secuencialmente en 4 etapas ($k = 1 \to 2 \to 3 \to 4$)** mediante anclas jerárquicas de bloques de tamaño $2 \to 4 \to 8$ y unión de bordes impares (con distancia máxima de referencia de 4 píxeles):
+
+$$a_k(x) = \begin{cases} x - 1 & k=1,\; x \equiv 1 \pmod 2 \\ 4\lfloor x/4 \rfloor + 1 & k=2,\; x \bmod 4 \in \{2, 3\} \\ 8\lfloor x/8 \rfloor + 3 & k=3,\; x \bmod 8 \in \{4, 5, 6, 7\} \\ x - 1 & k=4,\; x \equiv 0 \pmod 2,\; x \ge 2 \end{cases}$$
+
+$$\hat{p}_t(x, y) \leftarrow \hat{p}_t(a_k(x), y) \quad \text{if } \|\tilde{I}_t(x, y) - \text{Pal}[\hat{p}_t(a_k(x), y)]\|_\infty \le \delta_{\text{LZW}}$$
+
+#### Paso 2c. Histéresis de Voronoi en Lazo Cerrado y Limpieza de 1–2px (`encode_st_gif`)
+Rastreando el color RGB exacto en el lienzo del decodificador $\hat{C}_{t-1}(x, y) = \text{Pal}[\hat{P}_{\text{canvas}}(x, y)]$, con $e_{\text{old}} = \|\tilde{I}_t(x,y) - \hat{C}_{t-1}(x,y)\|_\infty$ y $e_{\text{new}} = \|\tilde{I}_t(x,y) - \text{Pal}[\hat{p}_t(x,y)]\|_\infty$, un píxel conserva el lienzo (`255 TRANSPARENT`) si se cumple **cualquiera** de las 4 condiciones:
+
+$$\text{keep}(x,y) = \neg M_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \hat{P}_{\text{canvas}}(x,y)\big) \;\lor\; \big(e_{\text{old}} \le \tau_{\text{keep}}\big) \;\lor\; \big(e_{\text{old}} - e_{\text{new}} \le \delta_{\text{gain}}\big)$$
+
+Finalmente, dos pasadas morfológicas revierten actualizaciones aisladas a transparente (`keep = True`) para maximizar las secuencias LZW:
+1. **Supresión de Motas (Speckles) $3\times 3$:** Revierte píxeles activos con $\le 2$ vecinos activos en una ventana de $3\times 3$ cuando $e_{\text{old}} \le 2\tau_{\text{keep}} + 2$.
+2. **Supresión de Islas Horizontales de 1px y 2px:** Revierte actualizaciones aisladas de $1\text{px}$ (`iso_1px`) y $2\text{px}$ (`iso_2px`) flanqueadas por píxeles transparentes cuando $e_{\text{old}} \le 2\tau_{\text{keep}} (+2)$.
 
 ---
 

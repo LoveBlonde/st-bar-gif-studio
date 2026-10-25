@@ -22,11 +22,11 @@
 
 ## 🌍 Multilingual Overview (다국어 프로젝트 소개)
 
-* 🇺🇸 **English:** **`st-bar-gif-studio`** introduces two novel, strictly $O(N)$ single-pass spatio-temporal compression algorithms—**ST-GIF v3** (for `.gif`) and **ST-BAR v4** (for `.webp`). By replacing greedy pairwise frame differencing and error-diffusion dithering with a **Normalized $5\times 5$ Signed Spatial Box Residual**, **Closed-Loop Voronoi Hysteresis**, and a **4-Stage Prefix-Doubling LZW Scanline Coalescer**, it achieves **66% to 96.6% smaller `.gif` files (3× to 29× compression)** than FFmpeg 2-Pass (`palettegen + paletteuse`) and eliminates **75% to 98.8% of temporal background flicker**, complete with a **click-through transparent screen recorder & continuous quality slider (`1 ~ 100`) GUI**. ([Read Full English Docs Below](#-overview-technical-background) | [🇰🇷 한국어 문서](README.ko.md) | [🇨🇳 中文文档](README.zh-CN.md) | [🇯🇵 日本語ドキュメント](README.ja.md) | [🇪🇸 Documentación en Español](README.es.md))
-* 🇰🇷 **한국어 (Korean):** **`st-bar-gif-studio`**는 기존 FFmpeg 2-Pass(`palettegen + paletteuse`), Pillow, `libwebp`가 가진 **시간축 노이즈 끓어오름(Temporal Boiling)**과 **디더링 위상 반전으로 인한 LZW 사전 붕괴 문제**를 근본적으로 해결한 차세대 $O(N)$ 시공간 움짤 압축 엔진(**ST-GIF v3** & **ST-BAR v4**)입니다. 실제 게임·화면 캡처에서 FFmpeg 최고급 2-Pass 대비 **용량을 66% ~ 96.6%(3배~29.1배 축소) 절감**하고 배경 자글거림을 **98.8%까지 제거**하며, **클릭 투과형 투명 캡처 프레임**과 **연속 품질 슬라이더(`1 ~ 100`) GUI**를 제공합니다. 👉 **[전체 한국어 문서 보기 (README.ko.md)](README.ko.md)**
-* 🇨🇳 **简体中文 (Simplified Chinese):** **`st-bar-gif-studio`** 提出了两种全新的严格 $O(N)$ 单遍时空动图压缩算法——**ST-GIF v3**（针对 `.gif`）与 **ST-BAR v4**（针对 `.webp`）。通过**带符号 $5\times 5$ 空间盒残差**、**闭环 Voronoi 迟滞**以及 **4 阶倍增前缀 LZW 扫描线合并器**，在真实游戏与屏幕录制测试中相比 FFmpeg 黄金标准双通道管线 **缩减 66% 至 96.6% 的体积（缩小 3 倍至 29.1 倍）**，消除 **75% 至 98.8% 的背景闪烁**，并内置 **鼠标点击穿透式透明录屏框与 `1 ~ 100` 连续质量滑块 GUI**。 👉 **[阅读完整中文文档 (README.zh-CN.md)](README.zh-CN.md)**
-* 🇯🇵 **日本語 (Japanese):** **`st-bar-gif-studio`** は、従来の FFmpeg 2-Pass や `libwebp` における**時間軸ノイズのちらつき（Temporal Boiling）**や**誤差拡散ディザリングによる LZW 辞書の崩壊**を解決する次世代 $O(N)$ 時空間アニメ画像圧縮エンジン（**ST-GIF v3** ＆ **ST-BAR v4**）です。実際のゲーム録画や画面キャプチャにおいて、FFmpeg 2-Pass と比較して **ファイルサイズを 66%〜96.6% 削減（1/3〜1/29 に圧縮）** し、背景フリッカーを **最大 98.8% 除去**。さらに **クリック透過型の画面録画フレーム＆連続品質スライダー (`1 ~ 100`) GUI** を備えています。 👉 **[日本語の完全なドキュメントを読む (README.ja.md)](README.ja.md)**
-* 🇪🇸 **Español (Spanish):** **`st-bar-gif-studio`** presenta dos nuevos algoritmos de compresión espacio-temporal $O(N)$ de una sola pasada: **ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`). Mediante el **Residuo Espacial de Caja con Signo de $5\times 5$**, la **Histéresis de Voronoi en Lazo Cerrado** y la **Fusión de Líneas LZW**, logra **archivos `.gif` entre un 66% y un 96.6% más pequeños (3× a 29× menor tamaño)** que FFmpeg 2-Pass y elimina **hasta el 98.8% del parpadeo temporal**, incluyendo un **estudio GUI con grabador de pantalla transparente y control deslizante de calidad (`1 ~ 100`)**. 👉 **[Leer documentación completa en Español (README.es.md)](README.es.md)**
+* 🇺🇸 **English:** **`st-bar-gif-studio`** introduces two novel, linear-time $O(N)$ (constant passes per frame) spatio-temporal compression algorithms—**ST-GIF v3** (for `.gif`) and **ST-BAR v4** (for `.webp`). By replacing greedy pairwise frame differencing and error-diffusion dithering with a **Normalized $5\times 5$ Signed Spatial Box Residual**, **Screen-Locked Conditional $4\times 4$ Bayer Dithering**, **Closed-Loop Voronoi Hysteresis**, and a **4-Stage Hierarchical Block-Anchor LZW Scanline Coalescer**, it achieves **66% to 96.6% smaller `.gif` files (3× to 29× compression)** than FFmpeg 2-Pass (`palettegen + paletteuse`) and eliminates **75% to 98.8% of temporal background flicker**, complete with a **click-through transparent screen recorder & continuous quality slider (`1 ~ 100`) GUI**. ([Read Full English Docs Below](#-overview-technical-background) | [🇰🇷 한국어 문서](README.ko.md) | [🇨🇳 中文文档](README.zh-CN.md) | [🇯🇵 日本語ドキュメント](README.ja.md) | [🇪🇸 Documentación en Español](README.es.md))
+* 🇰🇷 **한국어 (Korean):** **`st-bar-gif-studio`**는 기존 FFmpeg 2-Pass(`palettegen + paletteuse`), Pillow, `libwebp`가 가진 **시간축 노이즈 끓어오름(Temporal Boiling)**과 **디더링 위상 반전으로 인한 LZW 사전 붕괴 문제**를 근본적으로 해결한 차세대 선형 시간 $O(N)$ (프레임당 상수 패스) 시공간 움짤 압축 엔진(**ST-GIF v3** & **ST-BAR v4**)입니다. 실제 게임·화면 캡처에서 FFmpeg 최고급 2-Pass 대비 **용량을 66% ~ 96.6%(3배~29.1배 축소) 절감**하고 배경 자글거림을 **98.8%까지 제거**하며, **클릭 투과형 투명 캡처 프레임**과 **연속 품질 슬라이더(`1 ~ 100`) GUI**를 제공합니다. 👉 **[전체 한국어 문서 보기 (README.ko.md)](README.ko.md)**
+* 🇨🇳 **简体中文 (Simplified Chinese):** **`st-bar-gif-studio`** 提出了两种全新的线性时间 $O(N)$（每帧常数遍）时空动图压缩算法——**ST-GIF v3**（针对 `.gif`）与 **ST-BAR v4**（针对 `.webp`）。通过**带符号 $5\times 5$ 空间盒残差**、**屏幕坐标锁定条件 $4\times 4$ Bayer 抖动**、**闭环 Voronoi 迟滞**以及 **4 阶段分层块锚点 LZW 扫描线合并器**，在真实游戏与屏幕录制测试中相比 FFmpeg 黄金标准双通道管线 **缩减 66% 至 96.6% 的体积（缩小 3 倍至 29.1 倍）**，消除 **75% 至 98.8% 的背景闪烁**，并内置 **鼠标点击穿透式透明录屏框与 `1 ~ 100` 连续质量滑块 GUI**。 👉 **[阅读完整中文文档 (README.zh-CN.md)](README.zh-CN.md)**
+* 🇯🇵 **日本語 (Japanese):** **`st-bar-gif-studio`** は、従来の FFmpeg 2-Pass や `libwebp` における**時間軸ノイズのちらつき（Temporal Boiling）**や**誤差拡散ディザリングによる LZW 辞書の崩壊**を解決する次世代 $O(N)$ 線形時間（フレームあたり定数パス）時空間アニメ画像圧縮エンジン（**ST-GIF v3** ＆ **ST-BAR v4**）です。実際のゲーム録画や画面キャプチャにおいて、FFmpeg 2-Pass と比較して **ファイルサイズを 66%〜96.6% 削減（1/3〜1/29 に圧縮）** し、背景フリッカーを **最大 98.8% 除去**。さらに **クリック透過型の画面録画フレーム＆連続品質スライダー (`1 ~ 100`) GUI** を備えています。 👉 **[日本語の完全なドキュメントを読む (README.ja.md)](README.ja.md)**
+* 🇪🇸 **Español (Spanish):** **`st-bar-gif-studio`** presenta dos nuevos algoritmos de compresión espacio-temporal en tiempo lineal $O(N)$ (pasadas constantes por fotograma): **ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`). Mediante el **Residuo Espacial de Caja con Signo de $5\times 5$**, **Dithering Bayer $4\times 4$ Condicional Anclado a Pantalla**, la **Histéresis de Voronoi en Lazo Cerrado** y la **Fusión Jerárquica de Líneas LZW en 4 Etapas**, logra **archivos `.gif` entre un 66% y un 96.6% más pequeños (3× a 29× menor tamaño)** que FFmpeg 2-Pass y elimina **hasta el 98.8% del parpadeo temporal**, incluyendo un **estudio GUI con grabador de pantalla transparente y control deslizante de calidad (`1 ~ 100`)**. 👉 **[Leer documentación completa en Español (README.es.md)](README.es.md)**
 
 ---
 
@@ -37,7 +37,7 @@ Standard animated image encoders—such as **FFmpeg (`palettegen + paletteuse`)*
 2. **Dither Pattern Phase Flipping & Voronoi Boundary Toggling:** Error-diffusion dithering flips checkerboard patterns across frames, destroying LZW dictionary run lengths in `.gif` and inflating file sizes by **5× to 25×**.
 3. **DCT Macroblock Fragmentation (in Animated WebP):** Punching pixel-level transparent holes ($\alpha=0$) creates high-frequency step edges inside VP8 16×16 macroblocks, increasing AC coefficient entropy.
 
-**`st-bar-gif-studio`** introduces two novel, strictly $O(N)$ single-pass compression algorithms—**ST-GIF v3** (for classic `.gif`) and **ST-BAR v4** (for modern `.webp`)—wrapped in a convenient **Transparent Screen Recorder & Quality-Slider Studio GUI**.
+**`st-bar-gif-studio`** introduces two novel, linear-time $O(N)$ (constant passes per frame) compression algorithms—**ST-GIF v3** (for classic `.gif`) and **ST-BAR v4** (for modern `.webp`)—wrapped in a convenient **Transparent Screen Recorder & Quality-Slider Studio GUI**.
 
 ---
 
@@ -83,27 +83,50 @@ Tested on high-resolution real-world game and screen captures against **Pillow (
 
 ---
 
-## 🧠 Core Algorithmic Architecture
+## 🧠 Core Algorithmic Architecture (Code-Verified Specification)
 
 ```mermaid
 flowchart TD
-    A["Input Frame Sequence I_0 ... I_{T-1}"] --> B["Stage 1: L1-Cache Pure-uint8 Temporal Sigma Filter & Anisotropic 1x3 Smoothing"]
-    B --> C["Stage 2: Normalized 5x5 Signed Box Residual + 3-Tap Spike Gate & Anchor Lock"]
-    C --> D{"Target Output Format?"}
-    D -- "GIF89a (ST-GIF v3)" --> E["Motion-Weighted Perceptual Palette + 64x64x64 L2-Cache 3D KD-Tree LUT"]
-    E --> F["Closed-Loop Voronoi Hysteresis + 4-Stage Prefix-Doubling LZW Scanline Coalescer"]
+    A["Input Frame Sequence I_0 ... I_{T-1}"] --> B["Stage 1: L1-Cache Pure-uint8 3-Tap Temporal Sigma Filter (t-1, t, t+1)"]
+    B --> C{"Target Output Format?"}
+    C -- "GIF89a (ST-GIF v3)" --> D["Anisotropic 1x3 Horizontal Smoothing + 5x5 Signed Box Residual & Anchor Lock"]
+    D --> E["Motion-Weighted Perceptual Palette + 64x64x64 3D KD-Tree LUT & Screen-Locked 4x4 Bayer Dither"]
+    E --> F["4-Stage Hierarchical Block-Anchor LZW Coalescer + Closed-Loop Voronoi Hysteresis & Despeckler"]
     F --> G["Bijection Non-Interlaced LZW Stream Extractor & GIF89a Muxer"]
-    D -- "Animated WebP (ST-BAR v4)" --> H["3-Way Entropy Subframe Router: NO_BLEND RGB vs 16x16 Block-Alpha BLEND vs Near-Lossless VP8L"]
-    H --> I["Direct RIFF WEBP (VP8X + ANIM + ANMF) Bitstream Assembler"]
+    C -- "Animated WebP (ST-BAR v4)" --> H["5x5 Signed Box Residual + 3-Tap Spike Gate & Patchwork Anchor Lock"]
+    H --> I["3-Way Occupancy Subframe Router: Near-Lossless VP8L (<22% px) vs NO_BLEND RGB (>=60% blk) vs 16x16 Block-Alpha BLEND"]
+    I --> J["Direct RIFF WEBP (VP8X + ANIM + ANMF) Bitstream Assembler"]
 ```
 
-### 1. Signed Spatial Box Residual & 3-Tap Temporal Spike Gate ($O(N)$)
-Zero-mean sensor/compression noise $\eta \sim \mathcal{N}(0, \sigma^2)$ cancels out over a $5\times 5$ spatial window ($N=25$) when summed **with sign preserved** ($\sigma_{\text{mean}} = \sigma / 5$), whereas true object motion shifts local pixels coherently in the same direction. By exploiting the linearity of the box filter ($\text{Box}(C_t - A_{t-1}) = \text{Box}(C_t) - \text{Box}(A_{t-1})$), ST-BAR evaluates coherent motion in pure 8-bit SIMD (`cv2.boxFilter` + `cv2.absdiff`) in $< 1\text{ ms}$ per frame.
+### 1. Signed Spatial Box Residual & Patchwork Anchor Tracking (`stabilize_pure_u8_fast`)
+Zero-mean sensor/compression noise $\eta \sim \mathcal{N}(0, \sigma^2)$ cancels out over a $5\times 5$ spatial window ($N=25$) when summed **with sign preserved** ($\sigma_{\text{mean}} = \sigma / 5$), whereas true object motion shifts local pixels coherently in the same direction. Instead of comparing against the immediately preceding frame $t-1$, ST-BAR maintains a persistent **Anchor Canvas $A$** and an incrementally patched **Anchor Box Mean $B_{\text{anchor}}$** (updated via `cv2.copyTo(box_clean[t], dilated_u8, box_anchor)` only over dilated active motion regions):
 
-### 2. Closed-Loop Voronoi Hysteresis & 4-Stage Prefix-Doubling LZW Coalescer (`ST-GIF v3`)
-Instead of open-loop quantization, `ST-GIF v3` tracks the exact RGB color $\hat{C}_{t-1}(x, y) = \text{Palette}[\hat{P}_{t-1}(x, y)]$ currently displayed on the decoder's canvas and selects palette index $\hat{p}_t(x, y)$ via:
+$$\text{Box}(C_t - A) = \text{Box}(C_t) - \text{Box}(A) \approx \text{Box}(C_t) - B_{\text{anchor}}$$
 
-$$\hat{p}_t(x, y) = \begin{cases} 255 \text{ (TRANSPARENT)} & \text{if } \|\tilde{I}_t(x,y) - \hat{C}_{t-1}(x,y)\|_\infty \le \tau_{\text{keep}} \text{ or } e_{\text{old}} - e_{\text{new}} \le \delta_{\text{gain}} \\ \hat{p}_t(x - 2^k, y) & \text{if } \|\tilde{I}_t(x,y) - \text{Palette}[\hat{p}_t(x - 2^k, y)]\|_\infty \le \delta_{\text{LZW}} \quad (k \in \{0,1,2,3\}) \\ \text{LUT}_{64^3}(\tilde{I}_t(x,y)) & \text{otherwise} \end{cases}$$
+Combined with a 3-tap lookahead spike gate (`t+1` return check) and $3\times 3$ neighbor filtering, coherent motion is isolated in pure 8-bit SIMD (`cv2.boxFilter` + `cv2.absdiff`). For `.gif` (`anisotropic_smooth=True`), a conditional $1\times 3$ horizontal box filter is applied prior to motion detection to pre-smooth horizontal scanlines for LZW.
+
+### 2. ST-GIF v3 Three-Step Quantization & Closed-Loop LZW-RDO Pipeline (`st_gif_codec.py`)
+
+#### Step 2a. Screen-Locked Conditional $4\times 4$ Bayer Dithering (`quantize_frame_with_locked_bayer`)
+To prevent error-diffusion checkerboard phase flipping across frames, ST-GIF v3 uses a screen-coordinate-locked $4\times 4$ Bayer matrix $B_{4\times 4}(x\bmod 4, y\bmod 4)$, activated **only when $Q > 50$ ($s_{\text{dither}} > 0$) and the un-dithered quantization error exceeds $7$**:
+
+$$p_0(x,y) = \text{LUT}_{64^3}(\tilde{I}_t(x,y)), \qquad p_{\text{raw}}(x,y) = \begin{cases} \text{LUT}_{64^3}\!\left(\text{clip}\big(\tilde{I}_t(x,y) + s_{\text{dither}}\cdot B_{4\times 4}(x\bmod 4,\, y\bmod 4)\big)\right) & \text{if } Q > 50 \;\land\; \|\tilde{I}_t(x,y) - \text{Pal}[p_0(x,y)]\|_\infty > 7 \\ p_0(x,y) & \text{otherwise} \end{cases}$$
+
+#### Step 2b. 4-Stage Hierarchical Block-Anchor LZW Run Coalescer (`coalesce_lzw_horizontal_runs`)
+Starting from $\hat{p}_t \leftarrow p_{\text{raw}}$, horizontal scanlines are coalesced **sequentially across 4 stages ($k = 1 \to 2 \to 3 \to 4$)** using hierarchical block anchors (merging pairs $\to$ quads $\to$ octets $\to$ odd-boundarystitching, with maximum lookback distance $4$):
+
+$$a_k(x) = \begin{cases} x - 1 & k=1,\; x \equiv 1 \pmod 2 \\ 4\lfloor x/4 \rfloor + 1 & k=2,\; x \bmod 4 \in \{2, 3\} \\ 8\lfloor x/8 \rfloor + 3 & k=3,\; x \bmod 8 \in \{4, 5, 6, 7\} \\ x - 1 & k=4,\; x \equiv 0 \pmod 2,\; x \ge 2 \end{cases}$$
+
+$$\hat{p}_t(x, y) \leftarrow \hat{p}_t(a_k(x), y) \quad \text{if } \|\tilde{I}_t(x, y) - \text{Pal}[\hat{p}_t(a_k(x), y)]\|_\infty \le \delta_{\text{LZW}}$$
+
+#### Step 2c. Closed-Loop Voronoi Hysteresis & 1–2px Despeckling (`encode_st_gif`)
+Tracking the decoder's actual displayed canvas $\hat{C}_{t-1}(x,y) = \text{Pal}[\hat{P}_{\text{canvas}}(x,y)]$, let $e_{\text{old}} = \|\tilde{I}_t(x,y) - \hat{C}_{t-1}(x,y)\|_\infty$ and $e_{\text{new}} = \|\tilde{I}_t(x,y) - \text{Pal}[\hat{p}_t(x,y)]\|_\infty$. A pixel retains the canvas (`255 TRANSPARENT`) if **any** of the 4 hysteresis conditions hold:
+
+$$\text{keep}(x,y) = \neg M_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \hat{P}_{\text{canvas}}(x,y)\big) \;\lor\; \big(e_{\text{old}} \le \tau_{\text{keep}}\big) \;\lor\; \big(e_{\text{old}} - e_{\text{new}} \le \delta_{\text{gain}}\big)$$
+
+Finally, two morphological cleanup passes revert isolated updates back to `keep = True` (`255 TRANSPARENT`) to prevent LZW dictionary fragmentation:
+1. **$3\times 3$ Speckle Suppression:** Reverts active pixels with $\le 2$ active neighbors in a $3\times 3$ window when $e_{\text{old}} \le 2\tau_{\text{keep}} + 2$.
+2. **1px & 2px Horizontal Bridge Suppression:** Reverts 1-pixel (`iso_1px`) and 2-pixel (`iso_2px`) horizontal update islands flanked by `keep` pixels when $e_{\text{old}} \le 2\tau_{\text{keep}} (+2)$.
 
 ---
 
