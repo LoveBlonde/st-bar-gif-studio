@@ -8,7 +8,7 @@
   <a href="README.es.md">🇪🇸 Español</a>
 </p>
 
-> **下一代 $O(N)$ 时空 LZW-RDO `.gif` (ST-GIF v3) 与块对齐 `.webp` (ST-BAR v4) 动图压缩优化引擎 + Honeycam 风格屏幕录制工作室**
+> **下一代 $O(N)$ 时空 LZW-RDO `.gif` (ST-GIF v3) 与块对齐 `.webp` (ST-BAR v4) 动图压缩优化引擎 + 透明穿透屏幕录制工作室**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -24,15 +24,15 @@
 2. **抖动相位翻转与 Voronoi 边界跳变：** 误差扩散抖动在帧与帧之间不断翻转棋盘格相位，彻底破坏 `.gif` 的 LZW 字典游程（Run-Length），导致文件体积暴增 **5倍 至 25倍**。
 3. **DCT 宏块碎片化（在 Animated WebP 中）：** 逐像素打孔（$\alpha=0$）会在 VP8 $16\times 16$ 宏块内部产生高频阶跃边缘，大幅增加 AC 系数熵。
 
-**`st-bar-gif-studio`** 提出了两种全新的、严格 $O(N)$ 单遍（Single-Pass）时空压缩算法——**ST-GIF v3**（针对经典 `.gif`）和 **ST-BAR v4**（针对现代 `.webp`）——并配备了直观易用的 **Honeycam 风格透明穿透录屏框架与连续质量滑块 (`1 ~ 100`) 工作室 GUI**。
+**`st-bar-gif-studio`** 提出了两种全新的、严格 $O(N)$ 单遍（Single-Pass）时空压缩算法——**ST-GIF v3**（针对经典 `.gif`）和 **ST-BAR v4**（针对现代 `.webp`）——并配备了直观易用的 **鼠标点击穿透式透明录屏框架与连续质量滑块 (`1 ~ 100`) 工作室 GUI**。
 
 ---
 
 ## 📊 基准测试 1：真实游戏与屏幕录制 (`.gif` 压缩对比)
 
-在真实高分辨率 **Honeycam** 游戏/屏幕捕获素材上，与 **Pillow (`optimize=True`)** 及 **FFmpeg 黄金标准双通道管线 (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)** 进行对比：
+在真实高分辨率游戏与屏幕捕获素材上，与 **Pillow (`optimize=True`)** 及 **FFmpeg 黄金标准双通道管线 (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)** 进行对比：
 
-![ST-GIF v3 Real-World Honeycam Benchmark](assets/st_gif_honeycam_chart.png)
+![ST-GIF v3 Real-World Benchmark](assets/st_gif_realworld_chart.png)
 
 | 测试序列 (`分辨率`, `帧数`) | 编码方法 | 输出 `.gif` 体积 | 相比 `FFmpeg 2-Pass` 体积缩减 | 编码耗时 | PSNR | SSIM | 时域闪烁 (Flicker ↓) |
 | :--- | :--- | ---: | :---: | ---: | :---: | :---: | :---: |
@@ -91,7 +91,7 @@ cd st-bar-gif-studio
 pip install -r requirements.txt
 ```
 
-### 2. 启动 Honeycam 风格工作室 GUI
+### 2. 启动工作室 GUI
 在 Windows 上双击 `run_studio.bat`，或运行以下命令：
 ```bash
 python main.py

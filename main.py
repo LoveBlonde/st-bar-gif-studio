@@ -1,6 +1,6 @@
 """
 ST-BAR GIF Studio — Main Entry Point (GUI & CLI).
-- Run without arguments (`python main.py`) to launch the Honeycam-style Studio GUI.
+- Run without arguments (`python main.py`) to launch the Transparent Screen Recorder & Studio GUI.
 - Run with `--input` (`python main.py -i clip.webp -o out.gif -q 75`) for CLI batch conversion.
 """
 

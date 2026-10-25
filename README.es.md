@@ -8,7 +8,7 @@
   <a href="README.es.md"><b>🇪🇸 Español</b></a>
 </p>
 
-> **Motor de compresión espacio-temporal $O(N)$ de próxima generación para `.gif` (ST-GIF v3) y `.webp` animado (ST-BAR v4) + Estudio de grabación de pantalla estilo Honeycam**
+> **Motor de compresión espacio-temporal $O(N)$ de próxima generación para `.gif` (ST-GIF v3) y `.webp` animado (ST-BAR v4) + Estudio de grabación de pantalla transparente**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -24,15 +24,15 @@ Los codificadores de imágenes animadas estándar —como **FFmpeg (`palettegen 
 2. **Inversión de Fase de Dithering y Alternancia en Fronteras de Voronoi:** El tramado por difusión de error invierte el patrón de tablero de ajedrez entre fotogramas, destruyendo las secuencias LZW (Run-Length) en archivos `.gif` e inflando el tamaño entre **5× y 25×**.
 3. **Fragmentación de Macrobloques DCT (en Animated WebP):** Perforar píxeles transparentes individuales ($\alpha=0$) crea bordes escalonados de alta frecuencia dentro de los macrobloques VP8 de $16\times 16$, disparando la entropía de los coeficientes AC.
 
-**`st-bar-gif-studio`** introduce dos algoritmos de compresión espacio-temporales de una sola pasada estrictamente $O(N)$ —**ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`)— integrados en un **Estudio GUI con grabador de pantalla transparente estilo Honeycam y control deslizante continuo de calidad (`1 ~ 100`)**.
+**`st-bar-gif-studio`** introduce dos algoritmos de compresión espacio-temporales de una sola pasada estrictamente $O(N)$ —**ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`)— integrados en un **Estudio GUI con grabador de pantalla transparente y control deslizante continuo de calidad (`1 ~ 100`)**.
 
 ---
 
 ## 📊 Benchmark 1: Capturas Reales de Videojuegos y Pantalla (Compresión `.gif`)
 
-Probado con capturas reales de alta resolución de **Honeycam** frente a **Pillow (`optimize=True`)** y el pipeline de referencia de 2 pasadas de **FFmpeg (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)**:
+Probado con capturas reales de alta resolución de videojuegos y pantalla frente a **Pillow (`optimize=True`)** y el pipeline de referencia de 2 pasadas de **FFmpeg (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)**:
 
-![ST-GIF v3 Real-World Honeycam Benchmark](assets/st_gif_honeycam_chart.png)
+![ST-GIF v3 Real-World Benchmark](assets/st_gif_realworld_chart.png)
 
 | Secuencia (`Resolución`, `Fotogramas`) | Método Codificador | Tamaño `.gif` | Reducción vs `FFmpeg 2-Pass` | Tiempo | PSNR | SSIM | Parpadeo Temporal ↓ |
 | :--- | :--- | ---: | :---: | ---: | :---: | :---: | :---: |
@@ -91,7 +91,7 @@ cd st-bar-gif-studio
 pip install -r requirements.txt
 ```
 
-### 2. Ejecutar la Interfaz Gráfica (Studio GUI estilo Honeycam)
+### 2. Ejecutar la Interfaz Gráfica (Studio GUI)
 Haz doble clic en `run_studio.bat` en Windows, o ejecuta:
 ```bash
 python main.py

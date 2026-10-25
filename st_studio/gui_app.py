@@ -1,5 +1,5 @@
 """
-ST-BAR GIF Studio — Honeycam-Style Transparent Screen Recorder & Spatio-Temporal GIF/WebP Optimizer GUI.
+ST-BAR GIF Studio — Transparent Screen Recorder & Spatio-Temporal GIF/WebP Optimizer GUI.
 """
 
 import io
@@ -37,7 +37,7 @@ TRANSPARENT_KEY = "#010203"
 
 class ScreenRecorderOverlay(tk.Toplevel):
     """
-    Honeycam-style movable, resizable transparent capture frame window.
+    Movable, resizable transparent capture frame window.
     The interior region uses `-transparentcolor` so the user can see and click right through
     onto the game or video underneath.
     """
@@ -51,7 +51,7 @@ class ScreenRecorderOverlay(tk.Toplevel):
         self.geometry("640x420+250+180")
         self.minsize(260, 180)
         self.attributes("-topmost", True)
-        self.overrideredirect(True)  # Frameless Honeycam-style overlay
+        self.overrideredirect(True)  # Frameless transparent overlay
         self.configure(bg=TRANSPARENT_KEY)
         if sys.platform == "win32":
             self.attributes("-transparentcolor", TRANSPARENT_KEY)
@@ -263,7 +263,7 @@ class ScreenRecorderOverlay(tk.Toplevel):
 class STBarGifStudioApp(ctk.CTk):
     """
     Main Studio Window:
-    - Load existing WebP / GIF / MP4 / WebM or launch Honeycam-style Transparent Screen Recorder
+    - Load existing WebP / GIF / MP4 / WebM or launch Transparent Screen Recorder
     - Interactive animated preview with Start/End frame trim, Resolution scale, Playback speed
     - Continuous Quality Slider (1 ~ 100) with real-time parameter display & instant preview compression test
     """
@@ -304,7 +304,7 @@ class STBarGifStudioApp(ctk.CTk):
 
         ctk.CTkButton(
             top_frame,
-            text="🎥 화면 영역 녹화 (허니캠 모드)",
+            text="🎥 화면 영역 녹화 (투명 캡처 프레임)",
             fg_color="#e84118",
             hover_color="#c23616",
             font=ctk.CTkFont(family="Malgun Gothic", size=13, weight="bold"),
@@ -322,16 +322,16 @@ class STBarGifStudioApp(ctk.CTk):
             command=self.open_file_dialog,
         ).pack(side="left", padx=6, pady=8)
 
-        honeycam_dir = r"C:\Users\Lee\Documents\Honeycam"
-        if os.path.isdir(honeycam_dir):
+        docs_dir = os.path.join(os.path.expanduser("~"), "Documents")
+        if os.path.isdir(docs_dir):
             ctk.CTkButton(
                 top_frame,
-                text="🍯 내 허니캠 폴더에서 열기",
-                fg_color="#d35400",
-                hover_color="#e67e22",
+                text="📁 내 문서 폴더 열기",
+                fg_color="#3c6382",
+                hover_color="#0a3d62",
                 font=ctk.CTkFont(family="Malgun Gothic", size=12, weight="bold"),
                 height=38,
-                command=lambda: self.open_file_dialog(initial_dir=honeycam_dir),
+                command=lambda: self.open_file_dialog(initial_dir=docs_dir),
             ).pack(side="left", padx=6, pady=8)
 
         self.source_info_lbl = ctk.CTkLabel(

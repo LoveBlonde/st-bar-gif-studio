@@ -7,4 +7,4 @@ env/
 dist/
 build/
 *.spec
-honeycam_outputs/
+benchmark_outputs/

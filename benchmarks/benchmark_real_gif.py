@@ -1,10 +1,10 @@
 """
-Real-World Honeycam Benchmark:
+Real-World Game & Screen Capture Benchmark:
 Tests ST-GIF (Balanced & Compact) against:
 1. Pillow Standard GIF (save_all=True, optimize=True)
 2. FFmpeg 2-Pass GIF (palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle)
 3. FFmpeg 2-Pass GIF (palettegen + paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle)
-on real Honeycam captures from C:\\Users\\Lee\\Documents\\Honeycam.
+on real-world game and screen captures.
 """
 
 import io
@@ -21,8 +21,8 @@ from skimage.metrics import structural_similarity as ssim
 from st_gif_codec import encode_st_gif
 from st_bar_v4 import encode_st_bar_v4
 
-HONEYCAM_DIR = r"C:\Users\Lee\Documents\Honeycam"
-OUTPUT_DIR = r"C:\Users\Lee\.gemini\antigravity\scratch\st_bar_research\honeycam_outputs"
+CAPTURE_DIR = os.environ.get("ST_BENCHMARK_CAPTURE_DIR", "./sample_captures")
+OUTPUT_DIR = os.environ.get("ST_BENCHMARK_OUTPUT_DIR", "./benchmark_outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
@@ -163,17 +163,17 @@ def encode_ffmpeg_gif(frames: list[np.ndarray], durations: list[int], dither: st
     return gif_bytes, elapsed_ms
 
 
-def run_honeycam_benchmark():
-    all_files = sorted(glob.glob(os.path.join(HONEYCAM_DIR, "*.webp")), key=os.path.getsize)
+def run_realworld_benchmark():
+    all_files = sorted(glob.glob(os.path.join(CAPTURE_DIR, "*.webp")), key=os.path.getsize)
     # Select 4 diverse files:
-    # 0: C01_892x619_134f_10fps.webp (892x619, 134f)
-    # 1: C02_557x331_106f_10fps.webp (557x331, 106f)
-    # 2: C03_496x395_109f_28fps.webp (496x395, 109f)
-    # 8: C05_1051x482_89f_6fps.webp (1051x482, 89f)
+    # 0: Clip 1 (892x619, 134f)
+    # 1: Clip 2 (557x331, 106f)
+    # 2: Clip 3 (496x395, 109f)
+    # 8: Clip 4 (1051x482, 89f)
     test_indices = [0, 1, 2, 8]
 
     print("=" * 122)
-    print("REAL-WORLD HONEYCAM GIF COMPRESSION BENCHMARK (Pillow vs FFmpeg 2-Pass vs ST-GIF)")
+    print("REAL-WORLD SCREEN & GAME CAPTURE GIF COMPRESSION BENCHMARK (Pillow vs FFmpeg 2-Pass vs ST-GIF)")
     print("=" * 122)
 
     for idx in test_indices:
@@ -222,4 +222,4 @@ def run_honeycam_benchmark():
 
 
 if __name__ == "__main__":
-    run_honeycam_benchmark()
+    run_realworld_benchmark()

@@ -8,7 +8,7 @@
   <a href="README.es.md">🇪🇸 Español</a>
 </p>
 
-> **차세대 $O(N)$ 시공간 LZW-RDO `.gif` (ST-GIF v3) 및 블록 정렬 `.webp` (ST-BAR v4) 압축 최적화 엔진 & 허니캠 스타일 움짤 스튜디오**
+> **차세대 $O(N)$ 시공간 LZW-RDO `.gif` (ST-GIF v3) 및 블록 정렬 `.webp` (ST-BAR v4) 압축 최적화 엔진 & 투명 프레임 움짤 녹화 스튜디오**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -24,15 +24,15 @@
 2. **디더 패턴 위상 반전 & 보로노이 경계 토글링:** 오차 확산 디더링이 매 프레임마다 체크무늬 패턴의 위상을 뒤집어 `.gif`의 LZW 사전 런-렝스(Run-Length)를 파괴하고 용량을 **5배~25배** 폭증시킵니다.
 3. **DCT 매크로블록 파편화 (Animated WebP):** 픽셀 단위로 투명 구멍($\alpha=0$)을 뚫으면 VP8 $16\times 16$ 매크로블록 내부에 인위적인 고주파 계단 경계면이 생성되어 AC 계수 엔트로피가 급증합니다.
 
-**`st-bar-gif-studio`**는 완전한 $O(N)$ 단일 패스 시공간 압축 알고리즘인 **ST-GIF v3**(`.gif` 전용)와 **ST-BAR v4**(`.webp` 전용)를 새롭게 설계하고, 누구나 허니캠처럼 직관적으로 사용할 수 있는 **투명 화면 캡처 프레임 & 연속 품질 슬라이더(`1 ~ 100`) 스튜디오 GUI**를 제공합니다.
+**`st-bar-gif-studio`**는 완전한 $O(N)$ 단일 패스 시공간 압축 알고리즘인 **ST-GIF v3**(`.gif` 전용)와 **ST-BAR v4**(`.webp` 전용)를 새롭게 설계하고, 누구나 직관적으로 사용할 수 있는 **클릭 투과형 투명 화면 캡처 프레임 & 연속 품질 슬라이더(`1 ~ 100`) 스튜디오 GUI**를 제공합니다.
 
 ---
 
-## 📊 벤치마크 1: 실제 허니캠(Honeycam) 게임·화면 캡처 `.gif` 압축 비교
+## 📊 벤치마크 1: 실제 게임·화면 캡처 `.gif` 압축 비교
 
-실제 고해상도 **Honeycam** 캡처 원본들을 대상으로 **Pillow (`optimize=True`)** 및 **FFmpeg 최고급 2-Pass 파이프라인 (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)**과 비교 측정한 결과입니다:
+실제 고해상도 게임 및 화면 캡처 원본들을 대상으로 **Pillow (`optimize=True`)** 및 **FFmpeg 최고급 2-Pass 파이프라인 (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)**과 비교 측정한 결과입니다:
 
-![ST-GIF v3 Real-World Honeycam Benchmark](assets/st_gif_honeycam_chart.png)
+![ST-GIF v3 Real-World Benchmark](assets/st_gif_realworld_chart.png)
 
 | 캡처 시퀀스 (`해상도`, `프레임 수`) | 인코더 방식 | 출력 `.gif` 용량 | `FFmpeg 2-Pass` 대비 절감률 | 인코딩 시간 | PSNR | SSIM | 배경 자글거림 (Flicker ↓) |
 | :--- | :--- | ---: | :---: | ---: | :---: | :---: | :---: |
@@ -91,7 +91,7 @@ cd st-bar-gif-studio
 pip install -r requirements.txt
 ```
 
-### 2. 허니캠 스타일 스튜디오 GUI 실행
+### 2. 스튜디오 GUI 실행
 Windows에서 `run_studio.bat` 파일을 더블클릭하거나 아래 명령어를 실행하세요:
 ```bash
 python main.py

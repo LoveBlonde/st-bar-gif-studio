@@ -8,7 +8,7 @@
   <a href="README.es.md">🇪🇸 Español</a>
 </p>
 
-> **次世代 $O(N)$ 時空間 LZW-RDO `.gif` (ST-GIF v3) ＆ ブロック整列 `.webp` (ST-BAR v4) 圧縮最適化エンジン + Honeycam スタイルの画面録画スタジオ**
+> **次世代 $O(N)$ 時空間 LZW-RDO `.gif` (ST-GIF v3) ＆ ブロック整列 `.webp` (ST-BAR v4) 圧縮最適化エンジン + 透過フレーム画面録画スタジオ**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -20,19 +20,19 @@
 
 従来のアニメーション画像エンコーダ（**FFmpeg (`palettegen + paletteuse`)**、**Pillow**、**`libwebp` (`WebPAnimEncoder`)** など）は、隣接フレーム間の単純なピクセル差分（$I_t$ vs $I_{t-1}$）と誤差拡散ディザリング（Floyd-Steinberg / Sierra）に依存しています。微細なセンサーノイズや圧縮アーティファクト（$\pm 1 \sim 3$ RGB）を含む実際のゲーム録画や画面キャプチャに適用すると、以下の3つの致命的な非効率が発生します。
 
-1. **時間軸ボイリング (Temporal Boiling) と二重デルタペナルティ:** ランダムな微小ノイズが `A → B → A` の振動を引き起こし、サブフレームのバウンディングボックスが画面全体（100%）に膨張して背景のちらつき（フリッカー）を生じさせます。
+1. **時間軸ボイリング (Temporal Boiling) と二重デルタペナルティ:** ランダムな微小ノイズが `A → B → A` の振動を引き起こし、サブフレームのバ운ディングボックスが画面全体（100%）に膨張して背景のちらつき（フリッカー）を生じさせます。
 2. **ディザパターンの位相反転とボロノイ境界のトグル:** 誤差拡散ディザリングがフレームごとにチェッカーボードパターンの位相を反転させるため、`.gif` の LZW 辞書ランレングス（Run-Length）が破壊され、ファイルサイズが **5倍〜25倍** に肥大化します。
 3. **DCT マクロブロックの断片化 (Animated WebP):** ピクセル単位で透明な穴（$\alpha=0$）を開けると、VP8 の $16\times 16$ マクロブロック内部に人工的な高周波ステップエッジが生成され、AC 係数のエントロピーが急増します。
 
-**`st-bar-gif-studio`** は、完全な $O(N)$ シングルパス時空間圧縮アルゴリズムである **ST-GIF v3**（`.gif` 用）および **ST-BAR v4**（`.webp` 用）を独自実装し、直感的に使える **Honeycam スタイルの透過画面録画フレーム＆連続品質スライダー (`1 ~ 100`) 搭載 GUI スタジオ** を提供します。
+**`st-bar-gif-studio`** は、完全な $O(N)$ シングルパス時空間圧縮アルゴリズムである **ST-GIF v3**（`.gif` 用）および **ST-BAR v4**（`.webp` 用）を独自実装し、直感的に使える **クリック透過型の画面録画フレーム＆連続品質スライダー (`1 ~ 100`) 搭載 GUI スタジオ** を提供します。
 
 ---
 
 ## 📊 ベンチマーク 1：実際のゲーム・画面キャプチャ (`.gif` 圧縮比較)
 
-高解像度の実際の **Honeycam** キャプチャ素材を用いて、**Pillow (`optimize=True`)** および **FFmpeg 最高品質 2-Pass パイプライン (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)** と比較した結果です。
+高解像度の実際のゲーム・画面キャプチャ素材を用いて、**Pillow (`optimize=True`)** および **FFmpeg 最高品質 2-Pass パイプライン (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)** と比較した結果です。
 
-![ST-GIF v3 Real-World Honeycam Benchmark](assets/st_gif_honeycam_chart.png)
+![ST-GIF v3 Real-World Benchmark](assets/st_gif_realworld_chart.png)
 
 | キャプチャシーケンス (`解像度`, `フレーム数`) | エンコーダ方式 | 出力 `.gif` サイズ | `FFmpeg 2-Pass` 比削減率 | 処理時間 | PSNR | SSIM | 背景ちらつき (Flicker ↓) |
 | :--- | :--- | ---: | :---: | ---: | :---: | :---: | :---: |
@@ -91,7 +91,7 @@ cd st-bar-gif-studio
 pip install -r requirements.txt
 ```
 
-### 2. Honeycam スタイル Studio GUI の起動
+### 2. Studio GUI の起動
 Windows では `run_studio.bat` をダブルクリックするか、以下のコマンドを実行します：
 ```bash
 python main.py
