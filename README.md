@@ -1,7 +1,18 @@
 # 🎬 ST-BAR GIF Studio (`st-bar-gif-studio`)
 
-> **Next-Generation $O(N)$ Spatio-Temporal LZW-RDO GIF89a & Block-Aligned Animated WebP Compression Engine + Honeycam-Style Screen Recorder Studio**  
-> **차세대 $O(N)$ 시공간 LZW-RDO `.gif` 및 블록 정렬 `.webp` 압축 최적화 알고리즘 & 허니캠 스타일 움짤 스튜디오**
+<p align="center">
+  <a href="README.md"><b>🇺🇸 English</b></a> •
+  <a href="README.ko.md">🇰🇷 한국어</a> •
+  <a href="README.zh-CN.md">🇨🇳 简体中文</a> •
+  <a href="README.ja.md">🇯🇵 日本語</a> •
+  <a href="README.es.md">🇪🇸 Español</a>
+</p>
+
+> 🇺🇸 **Next-Generation $O(N)$ Spatio-Temporal LZW-RDO `.gif` & Block-Aligned `.webp` Compression Engine + Honeycam-Style Screen Recorder Studio**  
+> 🇰🇷 **차세대 $O(N)$ 시공간 LZW-RDO `.gif` 및 블록 정렬 `.webp` 압축 최적화 알고리즘 & 허니캠 스타일 움짤 스튜디오**  
+> 🇨🇳 **下一代 $O(N)$ 时空 LZW-RDO `.gif` 与块对齐 `.webp` 动图压缩优化引擎 + Honeycam 风格屏幕录制工作室**  
+> 🇯🇵 **次世代 $O(N)$ 時空間 LZW-RDO `.gif` ＆ ブロック整列 `.webp` 圧縮最適化エンジン + Honeycam スタイルの画面録画スタジオ**  
+> 🇪🇸 **Motor de compresión espacio-temporal $O(N)$ de próxima generación para `.gif` y `.webp` animado + Estudio de grabación estilo Honeycam**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-1dd1a1.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-48dbfb.svg)](https://www.python.org/)
@@ -9,7 +20,17 @@
 
 ---
 
-## 🌟 Overview (연구 배경 및 핵심 성과)
+## 🌍 Multilingual Overview (다국어 프로젝트 소개)
+
+* 🇺🇸 **English:** **`st-bar-gif-studio`** introduces two novel, strictly $O(N)$ single-pass spatio-temporal compression algorithms—**ST-GIF v3** (for `.gif`) and **ST-BAR v4** (for `.webp`). By replacing greedy pairwise frame differencing and error-diffusion dithering with a **Normalized $5\times 5$ Signed Spatial Box Residual**, **Closed-Loop Voronoi Hysteresis**, and a **4-Stage Prefix-Doubling LZW Scanline Coalescer**, it achieves **66% to 96.6% smaller `.gif` files (3× to 29× compression)** than FFmpeg 2-Pass (`palettegen + paletteuse`) and eliminates **75% to 98.8% of temporal background flicker**, complete with a **Honeycam-style click-through screen recorder & continuous quality slider (`1 ~ 100`) GUI**. ([Read Full English Docs Below](#-overview-technical-background) | [🇰🇷 한국어 문서](README.ko.md) | [🇨🇳 中文文档](README.zh-CN.md) | [🇯🇵 日本語ドキュメント](README.ja.md) | [🇪🇸 Documentación en Español](README.es.md))
+* 🇰🇷 **한국어 (Korean):** **`st-bar-gif-studio`**는 기존 FFmpeg 2-Pass(`palettegen + paletteuse`), Pillow, `libwebp`가 가진 **시간축 노이즈 끓어오름(Temporal Boiling)**과 **디더링 위상 반전으로 인한 LZW 사전 붕괴 문제**를 근본적으로 해결한 차세대 $O(N)$ 시공간 움짤 압축 엔진(**ST-GIF v3** & **ST-BAR v4**)입니다. 실제 게임·화면 캡처에서 FFmpeg 최고급 2-Pass 대비 **용량을 66% ~ 96.6%(3배~29.1배 축소) 절감**하고 배경 자글거림을 **98.8%까지 제거**하며, **허니캠 스타일 투명 캡처 프레임**과 **연속 품질 슬라이더(`1 ~ 100`) GUI**를 제공합니다. 👉 **[전체 한국어 문서 보기 (README.ko.md)](README.ko.md)**
+* 🇨🇳 **简体中文 (Simplified Chinese):** **`st-bar-gif-studio`** 提出了两种全新的严格 $O(N)$ 单遍时空动图压缩算法——**ST-GIF v3**（针对 `.gif`）与 **ST-BAR v4**（针对 `.webp`）。通过**带符号 $5\times 5$ 空间盒残差**、**闭环 Voronoi 迟滞**以及 **4 阶倍增前缀 LZW 扫描线合并器**，在真实游戏与屏幕录制测试中相比 FFmpeg 黄金标准双通道管线 **缩减 66% 至 96.6% 的体积（缩小 3 倍至 29.1 倍）**，消除 **75% 至 98.8% 的背景闪烁**，并内置 **Honeycam 风格鼠标穿透录屏框与 `1 ~ 100` 连续质量滑块 GUI**。 👉 **[阅读完整中文文档 (README.zh-CN.md)](README.zh-CN.md)**
+* 🇯🇵 **日本語 (Japanese):** **`st-bar-gif-studio`** は、従来の FFmpeg 2-Pass や `libwebp` における**時間軸ノイズのちらつき（Temporal Boiling）**や**誤差拡散ディザリングによる LZW 辞書の崩壊**を解決する次世代 $O(N)$ 時空間アニメ画像圧縮エンジン（**ST-GIF v3** ＆ **ST-BAR v4**）です。実際のゲーム録画や画面キャプチャにおいて、FFmpeg 2-Pass と比較して **ファイルサイズを 66%〜96.6% 削減（1/3〜1/29 に圧縮）** し、背景フリッカーを **最大 98.8% 除去**。さらに **Honeycam スタイルのクリック透過録画フレーム＆連続品質スライダー (`1 ~ 100`) GUI** を備えています。 👉 **[日本語の完全なドキュメントを読む (README.ja.md)](README.ja.md)**
+* 🇪🇸 **Español (Spanish):** **`st-bar-gif-studio`** presenta dos nuevos algoritmos de compresión espacio-temporal $O(N)$ de una sola pasada: **ST-GIF v3** (para `.gif`) y **ST-BAR v4** (para `.webp`). Mediante el **Residuo Espacial de Caja con Signo de $5\times 5$**, la **Histéresis de Voronoi en Lazo Cerrado** y la **Fusión de Líneas LZW**, logra **archivos `.gif` entre un 66% y un 96.6% más pequeños (3× a 29× menor tamaño)** que FFmpeg 2-Pass y elimina **hasta el 98.8% del parpadeo temporal**, incluyendo un **estudio GUI con grabador de pantalla transparente estilo Honeycam y control deslizante de calidad (`1 ~ 100`)**. 👉 **[Leer documentación completa en Español (README.es.md)](README.es.md)**
+
+---
+
+## 🌟 Overview (Technical Background)
 
 Standard animated image encoders—such as **FFmpeg (`palettegen + paletteuse`)**, **Pillow**, and **`libwebp` (`WebPAnimEncoder`)**—rely on greedy pairwise frame differencing ($I_t$ vs $I_{t-1}$) and error-diffusion dithering (Floyd-Steinberg / Sierra). When applied to real-world game captures or screen recordings containing subtle sensor/compression jitter ($\pm 1 \sim 3$ RGB), standard encoders suffer from three catastrophic inefficiencies:
 1. **Temporal Boiling & Double-Delta Penalty:** Random pixel noise triggers `A → B → A` oscillations, expanding sub-frame bounding boxes to 100% of the canvas and causing visible background flicker.
@@ -62,7 +83,7 @@ Tested on high-resolution real-world **Honeycam** game/screen captures against *
 
 ---
 
-## 🧠 Core Algorithmic Architecture (핵심 수리 모델 및 알고리즘)
+## 🧠 Core Algorithmic Architecture
 
 ```mermaid
 flowchart TD
@@ -86,25 +107,25 @@ $$\hat{p}_t(x, y) = \begin{cases} 255 \text{ (TRANSPARENT)} & \text{if } \|\tild
 
 ---
 
-## 🚀 Quick Start (설치 및 사용법)
+## 🚀 Quick Start
 
-### 1. Installation (설치)
+### 1. Installation
 ```bash
 git clone https://github.com/LoveBlonde/st-bar-gif-studio.git
 cd st-bar-gif-studio
 pip install -r requirements.txt
 ```
 
-### 2. Launch Honeycam-Style Studio GUI (프로그램 GUI 실행)
+### 2. Launch Honeycam-Style Studio GUI
 Double-click `run_studio.bat` on Windows, or run:
 ```bash
 python main.py
 ```
-* **🎥 화면 영역 녹화 (허니캠 모드):** 투명한 캡처 프레임 창을 게임이나 영상 위에 올려두고 **`● REC (또는 F9)`** 키를 눌러 원하는 FPS(15~50 FPS)로 즉시 캡처합니다.
-* **📂 기존 움짤/영상 최적화:** `.webp`, `.gif`, `.mp4`, `.webm` 파일을 불러와 시작/끝 구간 자르기(Trim), 크기 조절, 배속 조절을 수행합니다.
-* **🎚️ 연속 품질 슬라이더 (`1 ~ 100`) & 실시간 프리뷰:** 슬라이더로 압축 강도를 자유롭게 조절하고 **`[⚡ 현재 품질로 압축 테스트 & 화질 미리보기]`**를 눌러 저장 전 정확한 용량(KB/MB)과 실제 압축 화질을 즉시 비교할 수 있습니다.
+* **🎥 Transparent Screen Recording (`🔴 New Recording`):** Place the transparent click-through capture frame over any game or video and press **`● REC (or F9)`** to capture at 10–60 FPS.
+* **📂 Trim, Scale & Speed Control:** Load `.webp`, `.gif`, `.mp4`, or `.webm` files to trim start/end frames, scale resolution (`100%`, `75%`, `50%`), and adjust playback speed.
+* **🎚️ Continuous Quality Slider (`1 ~ 100`) & Live Preview:** Adjust the compression strength continuously and click **`[⚡ Test Compress Frame]`** to inspect real-time compressed quality before exporting.
 
-### 3. Command-Line Interface (CLI 변환)
+### 3. Command-Line Interface (CLI)
 ```bash
 # Convert WebP/MP4 to ultra-compact GIF (quality=75 balanced, quality=45 compact)
 python main.py -i input.webp -o output.gif -q 75
