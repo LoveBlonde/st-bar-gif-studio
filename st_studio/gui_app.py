@@ -52,16 +52,15 @@ class ScreenRecorderOverlay(tk.Toplevel):
         self.geometry("640x420+250+180")
         self.minsize(260, 180)
         self.attributes("-topmost", True)
-        self.overrideredirect(True)  # Frameless transparent overlay
-        self.configure(bg=TRANSPARENT_KEY)
-        if sys.platform == "win32":
-            self.attributes("-transparentcolor", TRANSPARENT_KEY)
+        self.overrideredirect(True)  # Frameless hollow capture overlay
+        self.configure(bg="#181c28")
 
         self.is_recording = False
         self.captured_frames = []
         self.captured_durations = []
         self.record_thread = None
         self.capture_bbox = {"left": 254, "top": 222, "width": 632, "height": 330}
+        self._last_hole_sig = None
         self._rec_elapsed = 0.0
         self._rec_error: str | None = None
         self._drag_data = {"x": 0, "y": 0}
@@ -153,10 +152,10 @@ class ScreenRecorderOverlay(tk.Toplevel):
         self.resize_grip.bind("<ButtonPress-1>", self._start_resize)
         self.resize_grip.bind("<B1-Motion>", self._on_resize)
 
-        # Middle Frame Border + See-through Interior
+        # Middle Frame Border + Cutout Interior (via Win32 SetWindowRgn)
         self.border_frame = tk.Frame(
             self,
-            bg=TRANSPARENT_KEY,
+            bg="#181c28",
             highlightbackground="#1dd1a1",
             highlightcolor="#1dd1a1",
             highlightthickness=4,
@@ -164,11 +163,45 @@ class ScreenRecorderOverlay(tk.Toplevel):
         self.border_frame.pack(side="top", fill="both", expand=True)
 
         self.BindConfigure = self.bind("<Configure>", self._update_dimensions_label)
-        self.after(100, self._update_dimensions_label)
+        self.after(50, self._update_dimensions_label)
+
+    def _apply_window_hole(self):
+        """
+        Cut a true OS-level rectangular hole inside `border_frame` using Win32 `SetWindowRgn`.
+        Unlike `-transparentcolor` (`WS_EX_LAYERED` + `LWA_COLORKEY`), which DWM renders as
+        opaque black `[0, 0, 0, 255]` during `BitBlt(..., CAPTUREBLT)`, `SetWindowRgn` physically
+        removes the interior pixels from the window so screen capture and mouse clicks pass 100% through.
+        """
+        if sys.platform != "win32" or not self.winfo_exists():
+            return
+        try:
+            import ctypes
+            user32 = ctypes.windll.user32
+            gdi32 = ctypes.windll.gdi32
+            win_w = self.winfo_width()
+            win_h = self.winfo_height()
+            hx1 = self.border_frame.winfo_x() + 4
+            hy1 = self.border_frame.winfo_y() + 4
+            raw_w = max(16, self.border_frame.winfo_width() - 8)
+            raw_h = max(16, self.border_frame.winfo_height() - 8)
+            sig = (win_w, win_h, hx1, hy1, raw_w, raw_h)
+            if sig == self._last_hole_sig:
+                return
+            self._last_hole_sig = sig
+
+            hwnd = user32.GetAncestor(self.winfo_id(), 2) or self.winfo_id()
+            r_full = gdi32.CreateRectRgn(0, 0, win_w, win_h)
+            r_hole = gdi32.CreateRectRgn(hx1, hy1, hx1 + raw_w, hy1 + raw_h)
+            gdi32.CombineRgn(r_full, r_full, r_hole, 4)  # RGN_DIFF = 4
+            user32.SetWindowRgn(hwnd, r_full, True)
+            gdi32.DeleteObject(r_hole)
+        except Exception:
+            pass
 
     def _get_capture_bbox(self):
         self.update_idletasks()
-        # Exclude the 4px highlight border so only the clean interior is captured
+        self._apply_window_hole()
+        # Exclude the 4px highlight border so only the clean cutout interior is captured
         x = self.border_frame.winfo_rootx() + 4
         y = self.border_frame.winfo_rooty() + 4
         w = max(16, (self.border_frame.winfo_width() - 8) // 2 * 2)
@@ -234,6 +267,88 @@ class ScreenRecorderOverlay(tk.Toplevel):
         self.info_lbl.config(text=f"● REC {el:.1f}s ({n_f} frames)", fg="#ff6b81")
         self.after(80, self._poll_recording_status)
 
+    @staticmethod
+    def _capture_via_printwindow(bbox: dict) -> np.ndarray | None:
+        """
+        Fallback for hybrid-GPU or restricted GDI desktops using Win32 PrintWindow(PW_RENDERFULLCONTENT).
+        """
+        if sys.platform != "win32":
+            return None
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            user32 = ctypes.windll.user32
+            gdi32 = ctypes.windll.gdi32
+
+            class POINT(ctypes.Structure):
+                _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+            class BITMAPINFOHEADER(ctypes.Structure):
+                _fields_ = [
+                    ("biSize", wintypes.DWORD),
+                    ("biWidth", wintypes.LONG),
+                    ("biHeight", wintypes.LONG),
+                    ("biPlanes", wintypes.WORD),
+                    ("biBitCount", wintypes.WORD),
+                    ("biCompression", wintypes.DWORD),
+                    ("biSizeImage", wintypes.DWORD),
+                    ("biXPelsPerMeter", wintypes.LONG),
+                    ("biYPelsPerMeter", wintypes.LONG),
+                    ("biClrUsed", wintypes.DWORD),
+                    ("biClrImportant", wintypes.DWORD),
+                ]
+
+            cx = bbox["left"] + bbox["width"] // 2
+            cy = bbox["top"] + bbox["height"] // 2
+            hit_hwnd = user32.WindowFromPoint(POINT(cx, cy))
+            if not hit_hwnd:
+                return None
+            target_hwnd = user32.GetAncestor(hit_hwnd, 2) or hit_hwnd
+
+            w_rect = wintypes.RECT()
+            if not user32.GetWindowRect(target_hwnd, ctypes.byref(w_rect)):
+                return None
+            ww = max(1, w_rect.right - w_rect.left)
+            wh = max(1, w_rect.bottom - w_rect.top)
+
+            wnd_dc = user32.GetWindowDC(target_hwnd)
+            if not wnd_dc:
+                return None
+            mem_dc = gdi32.CreateCompatibleDC(wnd_dc)
+            bmi = BITMAPINFOHEADER()
+            bmi.biSize = ctypes.sizeof(BITMAPINFOHEADER)
+            bmi.biWidth = ww
+            bmi.biHeight = -wh
+            bmi.biPlanes = 1
+            bmi.biBitCount = 32
+            bits = ctypes.c_void_p()
+            hbmp = gdi32.CreateDIBSection(mem_dc, ctypes.byref(bmi), 0, ctypes.byref(bits), None, 0)
+            gdi32.SelectObject(mem_dc, hbmp)
+
+            ok = user32.PrintWindow(target_hwnd, mem_dc, 2)  # PW_RENDERFULLCONTENT = 2
+            arr_rgb = None
+            if ok and bits.value:
+                full_bgra = np.ctypeslib.as_array((ctypes.c_uint8 * (wh * ww * 4)).from_address(bits.value)).reshape(wh, ww, 4)
+                full_rgb = cv2.cvtColor(full_bgra, cv2.COLOR_BGRA2RGB)
+                out = np.zeros((bbox["height"], bbox["width"], 3), dtype=np.uint8)
+                ox1 = max(bbox["left"], w_rect.left)
+                oy1 = max(bbox["top"], w_rect.top)
+                ox2 = min(bbox["left"] + bbox["width"], w_rect.right)
+                oy2 = min(bbox["top"] + bbox["height"], w_rect.bottom)
+                if ox2 > ox1 and oy2 > oy1:
+                    out[oy1 - bbox["top"] : oy2 - bbox["top"], ox1 - bbox["left"] : ox2 - bbox["left"]] = full_rgb[
+                        oy1 - w_rect.top : oy2 - w_rect.top, ox1 - w_rect.left : ox2 - w_rect.left
+                    ]
+                arr_rgb = out
+
+            gdi32.DeleteObject(hbmp)
+            gdi32.DeleteDC(mem_dc)
+            user32.ReleaseDC(target_hwnd, wnd_dc)
+            return arr_rgb
+        except Exception:
+            return None
+
     def _record_loop(self, fps: int):
         target_interval = 1.0 / float(fps)
         t_start = time.perf_counter()
@@ -244,21 +359,35 @@ class ScreenRecorderOverlay(tk.Toplevel):
             while self.is_recording:
                 now = time.perf_counter()
                 bbox = dict(self.capture_bbox)
+                arr_rgb = None
                 try:
                     shot = sct.grab(bbox)
                     arr_bgra = np.array(shot, dtype=np.uint8)
                     arr_rgb = cv2.cvtColor(arr_bgra, cv2.COLOR_BGRA2RGB)
                 except Exception as e_mss:
+                    self._rec_error = str(e_mss)
+
+                if arr_rgb is None or int(arr_rgb[::8, ::8].max()) == 0:
                     try:
                         pil_shot = ImageGrab.grab(
                             bbox=(bbox["left"], bbox["top"], bbox["left"] + bbox["width"], bbox["top"] + bbox["height"]),
+                            include_layered_windows=False,
                             all_screens=True,
                         )
-                        arr_rgb = np.array(pil_shot.convert("RGB"), dtype=np.uint8)
+                        cand = np.array(pil_shot.convert("RGB"), dtype=np.uint8)
+                        if int(cand[::8, ::8].max()) > 0 or arr_rgb is None:
+                            arr_rgb = cand
                     except Exception:
-                        self._rec_error = str(e_mss)
-                        self.is_recording = False
-                        break
+                        pass
+
+                if arr_rgb is None or int(arr_rgb[::8, ::8].max()) == 0:
+                    pw_rgb = self._capture_via_printwindow(bbox)
+                    if pw_rgb is not None and (int(pw_rgb[::8, ::8].max()) > 0 or arr_rgb is None):
+                        arr_rgb = pw_rgb
+
+                if arr_rgb is None:
+                    self.is_recording = False
+                    break
 
                 if target_hw is None:
                     target_hw = (arr_rgb.shape[0], arr_rgb.shape[1])
