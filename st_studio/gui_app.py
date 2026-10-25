@@ -6,13 +6,14 @@ import io
 import os
 import sys
 import time
+import queue
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import customtkinter as ctk
 import numpy as np
 import cv2
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageGrab
 import mss
 
 from .st_gif_codec import encode_st_gif, map_quality_to_st_gif_params
@@ -60,6 +61,9 @@ class ScreenRecorderOverlay(tk.Toplevel):
         self.captured_frames = []
         self.captured_durations = []
         self.record_thread = None
+        self.capture_bbox = {"left": 254, "top": 222, "width": 632, "height": 330}
+        self._rec_elapsed = 0.0
+        self._rec_error: str | None = None
         self._drag_data = {"x": 0, "y": 0}
         self._resize_data = {"x": 0, "y": 0, "w": 0, "h": 0}
 
@@ -169,11 +173,14 @@ class ScreenRecorderOverlay(tk.Toplevel):
         y = self.border_frame.winfo_rooty() + 4
         w = max(16, (self.border_frame.winfo_width() - 8) // 2 * 2)
         h = max(16, (self.border_frame.winfo_height() - 8) // 2 * 2)
-        return {"left": x, "top": y, "width": w, "height": h}
+        self.capture_bbox = {"left": x, "top": y, "width": w, "height": h}
+        return self.capture_bbox
 
     def _update_dimensions_label(self, event=None):
+        if not self.winfo_exists():
+            return
+        bbox = self._get_capture_bbox()
         if not self.is_recording:
-            bbox = self._get_capture_bbox()
             self.info_lbl.config(text=f"{bbox['width']} × {bbox['height']} px")
 
     def _start_move(self, event):
@@ -205,39 +212,65 @@ class ScreenRecorderOverlay(tk.Toplevel):
             self.stop_recording()
 
     def start_recording(self):
+        self.capture_bbox = self._get_capture_bbox()
         self.is_recording = True
         self.captured_frames = []
         self.captured_durations = []
+        self._rec_elapsed = 0.0
+        self._rec_error = None
         self.border_frame.config(highlightbackground="#ff4757", highlightcolor="#ff4757")
         self.rec_btn.config(text="■ 정지 및 편집 (F9)", bg="#feca57", fg="#12151e")
         fps = int(self.fps_var.get())
         self.record_thread = threading.Thread(target=self._record_loop, args=(fps,), daemon=True)
         self.record_thread.start()
+        self.after(80, self._poll_recording_status)
+
+    def _poll_recording_status(self):
+        if not self.is_recording or not self.winfo_exists():
+            return
+        self._get_capture_bbox()
+        n_f = len(self.captured_frames)
+        el = self._rec_elapsed
+        self.info_lbl.config(text=f"● REC {el:.1f}s ({n_f} frames)", fg="#ff6b81")
+        self.after(80, self._poll_recording_status)
 
     def _record_loop(self, fps: int):
         target_interval = 1.0 / float(fps)
-        bbox = self._get_capture_bbox()
         t_start = time.perf_counter()
         last_t = t_start
+        target_hw = None
 
         with mss.mss() as sct:
             while self.is_recording:
                 now = time.perf_counter()
-                shot = sct.grab(bbox)
-                # Convert BGRA -> RGB numpy array
-                arr_bgra = np.array(shot, dtype=np.uint8)
-                arr_rgb = cv2.cvtColor(arr_bgra, cv2.COLOR_BGRA2RGB)
+                bbox = dict(self.capture_bbox)
+                try:
+                    shot = sct.grab(bbox)
+                    arr_bgra = np.array(shot, dtype=np.uint8)
+                    arr_rgb = cv2.cvtColor(arr_bgra, cv2.COLOR_BGRA2RGB)
+                except Exception as e_mss:
+                    try:
+                        pil_shot = ImageGrab.grab(
+                            bbox=(bbox["left"], bbox["top"], bbox["left"] + bbox["width"], bbox["top"] + bbox["height"]),
+                            all_screens=True,
+                        )
+                        arr_rgb = np.array(pil_shot.convert("RGB"), dtype=np.uint8)
+                    except Exception:
+                        self._rec_error = str(e_mss)
+                        self.is_recording = False
+                        break
+
+                if target_hw is None:
+                    target_hw = (arr_rgb.shape[0], arr_rgb.shape[1])
+                elif (arr_rgb.shape[0], arr_rgb.shape[1]) != target_hw:
+                    arr_rgb = cv2.resize(arr_rgb, (target_hw[1], target_hw[0]), interpolation=cv2.INTER_AREA)
+
                 self.captured_frames.append(arr_rgb)
 
                 dt_ms = int(round((now - last_t) * 1000.0)) if len(self.captured_frames) > 1 else int(round(target_interval * 1000.0))
                 self.captured_durations.append(max(10, dt_ms))
                 last_t = now
-
-                n_f = len(self.captured_frames)
-                elapsed = now - t_start
-                self.after(0, lambda f=n_f, el=elapsed: self.info_lbl.config(
-                    text=f"● REC {el:.1f}s ({f} frames)", fg="#ff6b81"
-                ))
+                self._rec_elapsed = now - t_start
 
                 sleep_t = target_interval - (time.perf_counter() - now)
                 if sleep_t > 0:
@@ -246,13 +279,18 @@ class ScreenRecorderOverlay(tk.Toplevel):
     def stop_recording(self):
         self.is_recording = False
         if self.record_thread is not None:
-            self.record_thread.join(timeout=1.0)
+            self.record_thread.join(timeout=1.5)
         frames = self.captured_frames
         durs = self.captured_durations
+        rec_err = self._rec_error
         self.destroy()
         self.parent.deiconify()
+        self.parent.update_idletasks()
+        self.parent.lift()
         if len(frames) > 0:
             self.on_capture_finished(frames, durs, "화면 녹화 캡처")
+        elif rec_err:
+            messagebox.showerror("화면 녹화 오류", f"화면을 캡처하지 못했습니다:\n{rec_err}")
 
     def close_overlay(self):
         self.is_recording = False
@@ -290,6 +328,7 @@ class STBarGifStudioApp(ctk.CTk):
         self.current_frame_idx: int = 0
         self._play_job = None
         self._photo_ref = None
+        self._worker_queue: queue.Queue = queue.Queue()
 
         self._build_ui()
 
@@ -358,6 +397,7 @@ class STBarGifStudioApp(ctk.CTk):
 
         self.canvas_bg = tk.Canvas(left_panel, bg="#0f1219", highlightthickness=0)
         self.canvas_bg.grid(row=1, column=0, sticky="nsew", padx=12, pady=6)
+        self.canvas_bg.bind("<Configure>", self._on_canvas_configure)
 
         # Playback & Trim Bar
         trim_frame = ctk.CTkFrame(left_panel, fg_color="#181c28", corner_radius=8)
@@ -589,6 +629,10 @@ class STBarGifStudioApp(ctk.CTk):
 
     def open_screen_recorder(self):
         self.is_playing = False
+        if self._play_job is not None:
+            self.after_cancel(self._play_job)
+            self._play_job = None
+        self.source_size_bytes = 0
         self.withdraw()
         ScreenRecorderOverlay(self, self.on_sequence_loaded)
 
@@ -654,8 +698,9 @@ class STBarGifStudioApp(ctk.CTk):
         n = len(frames)
         H, W, _ = frames[0].shape
         steps = max(1, n - 1)
-        self.start_trim_slider.configure(from_=0, to=n - 1, number_of_steps=steps)
-        self.end_trim_slider.configure(from_=0, to=n - 1, number_of_steps=steps)
+        slider_max = max(1, n - 1)
+        self.start_trim_slider.configure(from_=0, to=slider_max, number_of_steps=steps)
+        self.end_trim_slider.configure(from_=0, to=slider_max, number_of_steps=steps)
         self.start_trim_slider.set(0)
         self.end_trim_slider.set(n - 1)
 
@@ -671,7 +716,12 @@ class STBarGifStudioApp(ctk.CTk):
         self.current_frame_idx = 0
         self.is_playing = True
         self.play_btn.configure(text="⏸ 일시정지")
+        self.update_idletasks()
         self._schedule_next_frame()
+
+    def _on_canvas_configure(self, event=None):
+        if not self.is_playing and (self.raw_frames or self.preview_frames):
+            self._schedule_next_frame()
 
     def _on_trim_changed(self, _=None):
         s = int(round(self.start_trim_slider.get()))
@@ -788,10 +838,7 @@ class STBarGifStudioApp(ctk.CTk):
         frames, durs = self._get_transformed_sequence()
 
         def update_prog(p: float, msg: str):
-            self.after(0, lambda: (
-                self.progress_bar.set(p),
-                self.result_sub_lbl.configure(text=msg),
-            ))
+            self._worker_queue.put(("progress", (p, msg)))
 
         def worker():
             try:
@@ -813,15 +860,37 @@ class STBarGifStudioApp(ctk.CTk):
                 except EOFError:
                     pass
 
-                self.after(0, lambda: self._on_compression_done(out_bytes, ext, dec_f, dec_d, elapsed_ms, q, save_after))
+                self._worker_queue.put(("done", (out_bytes, ext, dec_f, dec_d, elapsed_ms, q, save_after)))
             except Exception as e:
-                self.after(0, lambda: (
-                    messagebox.showerror("압축 오류", str(e)),
-                    self.test_compress_btn.configure(state="normal"),
-                    self.save_btn.configure(state="normal"),
-                ))
+                self._worker_queue.put(("error", str(e)))
 
         threading.Thread(target=worker, daemon=True).start()
+        self.after(40, self._poll_worker_queue)
+
+    def _poll_worker_queue(self):
+        keep_polling = True
+        while True:
+            try:
+                kind, payload = self._worker_queue.get_nowait()
+            except queue.Empty:
+                break
+
+            if kind == "progress":
+                p, msg = payload
+                self.progress_bar.set(p)
+                self.result_sub_lbl.configure(text=msg)
+            elif kind == "done":
+                out_bytes, ext, dec_f, dec_d, elapsed_ms, q, save_after = payload
+                self._on_compression_done(out_bytes, ext, dec_f, dec_d, elapsed_ms, q, save_after)
+                keep_polling = False
+            elif kind == "error":
+                messagebox.showerror("압축 오류", payload)
+                self.test_compress_btn.configure(state="normal")
+                self.save_btn.configure(state="normal")
+                keep_polling = False
+
+        if keep_polling:
+            self.after(40, self._poll_worker_queue)
 
     def _on_compression_done(self, out_bytes, ext, dec_f, dec_d, elapsed_ms, q, save_after):
         self.compressed_bytes = out_bytes
