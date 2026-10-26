@@ -16,6 +16,22 @@
 
 ---
 
+## 📑 목차 (Table of Contents)
+
+1. [🖼️ 시각적 원리 설명 & 심층 비교 슬라이드](#visual-slides)
+2. [🌟 연구 배경 및 핵심 성과](#overview)
+3. [📊 벤치마크 1: 실제 게임·화면 캡처 `.gif` 압축 비교](#benchmark-gif)
+4. [📊 벤치마크 2: Animated WebP 최적화 (`ST-BAR v4` vs `libwebp`)](#benchmark-webp)
+5. [🧠 핵심 수리 모델 및 알고리즘 아키텍처 (코드 검증 명세)](#architecture)
+   - [5.1 부호 보존 공간 박스 잔차 & 패치워크 앵커 추적 (`stabilize_pure_u8_fast`)](#arch-box-residual)
+   - [5.2 ST-GIF v3 3단계 양자화 및 폐루프 LZW-RDO 파이프라인 (`st_gif_codec.py`)](#arch-st-gif-v3)
+6. [🚀 설치 및 사용법 (GUI & CLI)](#quickstart)
+7. [🔬 심층 연구 결과 및 논문 실험 리포트 (`Benchmark` & `Experiments`)](#research-experiments)
+8. [📄 라이선스](#license)
+
+---
+
+<a id="visual-slides"></a>
 ## 🖼️ 시각적 원리 설명 & 심층 비교 슬라이드 (클릭하여 전체 보기)
 
 복잡한 수식을 읽기 전에 아래 썸네일이나 제목 링크를 클릭하면 목적별 슬라이드 전체를 한눈에 보실 수 있습니다:
@@ -27,6 +43,7 @@
 
 ---
 
+<a id="overview"></a>
 ## 🌟 연구 배경 및 핵심 성과
 
 기존의 대표적인 움짤 인코더들—**FFmpeg (`palettegen + paletteuse`)**, **Pillow**, **`libwebp` (`WebPAnimEncoder`)**—은 인접한 두 프레임 간의 단순 픽셀 차분($I_t$ vs $I_{t-1}$, 허용오차 0 또는 $\pm 4$)과 오차 확산 디더링(Floyd-Steinberg / Sierra)에 의존합니다. 미세한 센서 노이즈나 영상 압축 잔상($\pm 1 \sim 3$ RGB)이 포함된 실제 게임 화면 및 화면 녹화 영상에서는 다음 3가지 치명적인 비효율이 발생합니다:
@@ -39,6 +56,7 @@
 
 ---
 
+<a id="benchmark-gif"></a>
 ## 📊 벤치마크 1: 실제 게임·화면 캡처 `.gif` 압축 비교
 
 실제 고해상도 게임 및 화면 캡처 원본들을 대상으로 **Pillow (`optimize=True`)** 및 **FFmpeg 최고급 2-Pass 파이프라인 (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)**과 비교 측정한 결과입니다:
@@ -70,6 +88,7 @@
 
 ---
 
+<a id="benchmark-webp"></a>
 ## 📊 벤치마크 2: Animated WebP 최적화 (`ST-BAR v4` vs `libwebp`)
 
 ![ST-BAR v4 Benchmark Chart](assets/st_bar_benchmark_chart.png)
@@ -81,6 +100,7 @@
 
 ---
 
+<a id="architecture"></a>
 ## 🧠 핵심 수리 모델 및 알고리즘 아키텍처 (코드 검증 명세)
 
 ```mermaid
@@ -96,6 +116,7 @@ flowchart TD
     I --> J["Direct RIFF WEBP (VP8X + ANIM + ANMF) 비트스트림 조립기"]
 ```
 
+<a id="arch-box-residual"></a>
 ### 1. 부호 보존 공간 박스 잔차 & 패치워크 앵커 추적 (`stabilize_pure_u8_fast`)
 평균이 0인 가우시안 노이즈 $\eta \sim \mathcal{N}(0, \sigma^2)$는 $5\times 5$ 공간 윈도우($N=25$)에서 **부호를 보존한 채 합산**하면 서로 상쇄되어 표준편차가 $\sigma_{\text{mean}} = \sigma / 5$로 줄어들지만, 실제 물체의 이동은 같은 방향으로 일관된 편향을 만듭니다. 직전 프레임($t-1$)과 단순 비교하는 대신, 움직임이 감지될 때만 갱신되는 **앵커 프레임 $A$**와 움직인 영역(`dilated_u8`)에만 `box_clean[t]`를 덮어쓰는 **패치워크 앵커 박스 평균 $B_{\text{anchor}}$**(`cv2.copyTo(box_clean[t], dilated_u8, box_anchor)`)를 별도로 추적합니다:
 
@@ -103,6 +124,7 @@ $$\text{Box}(C_t - A) = \text{Box}(C_t) - \text{Box}(A) \approx \text{Box}(C_t) 
 
 여기에 $t+1$ 프레임을 참조하는 3-Tap 스파이크 게이트 및 $3\times 3$ 이웃 필터링을 결합하여 순수 8비트 SIMD(`cv2.boxFilter` + `cv2.absdiff`) 연산으로 실제 움직임만 분리합니다. (`.gif` 인코딩 시에는 `anisotropic_smooth=True`가 활성화되어 LZW 가로 런 효율을 높이기 위한 조건부 $1\times 3$ 가로 스무딩이 선행됩니다.)
 
+<a id="arch-st-gif-v3"></a>
 ### 2. ST-GIF v3 3단계 양자화 및 폐루프 LZW-RDO 파이프라인 (`st_gif_codec.py`)
 
 #### Step 2a. 화면 절대좌표 고정 조건부 $4\times 4$ Bayer 디더링 (`quantize_frame_with_locked_bayer`)
@@ -128,6 +150,7 @@ $$\text{keep}(x,y) = \neg\text{active}_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \ha
 
 ---
 
+<a id="quickstart"></a>
 ## 🚀 설치 및 사용법
 
 ### 1. 설치
@@ -157,5 +180,36 @@ python main.py -i input.mp4 -o output.webp -q 80
 
 ---
 
+<a id="research-experiments"></a>
+## 🔬 심층 연구 결과 및 논문 실험 리포트 (`Benchmark` & `Experiments`)
+
+실제 화면·게임 캡처 95개 중 파일 크기 순위로 층화 추출한 **20개 클립(260개 인코딩 설정)**을 대상으로 **`gifski 1.34` · `gifsicle 1.94 (-O3 --lossy)` · `FFmpeg 6.1.1 2-pass`**와 율-왜곡(RD) 곡선, **BD-rate**, 지각 화질(**VMAF / VMAF-NEG**), 계조 밴딩(**CAMBI**), 시간 안정성(**Flicker / TDE**), 그리고 **구성 요소별 동일 용량 어블레이션(Ablation)**을 정밀 측정한 연구 문서와 차트 모음입니다:
+
+| 📘 종합 벤치마크 리포트 (`Benchmark`) | 📙 논문 4장 실험절 초안 (`Experiments`) |
+| :---: | :---: |
+| 👉 **[🇰🇷 한국어 벤치마크 리포트 (`BENCHMARK.ko.md`)](assets/benchmark/BENCHMARK.ko.md)**<br><sub>([🇺🇸 English Version (`BENCHMARK.en.md`)](assets/benchmark/BENCHMARK.en.md))</sub> | 👉 **[🇰🇷 한국어 논문 실험절 초안 (`experiments.ko.md`)](assets/experiments/experiments.ko.md)**<br><sub>([🇺🇸 English Version (`experiments.en.md`)](assets/experiments/experiments.en.md))</sub> |
+
+### 📈 주요 실험 그래프 갤러리 (클릭하여 원본 및 상세 분석 보기)
+
+| 📊 `gifski` 대비 클립별 BD-rate | 📉 대표 클립 율-품질(RD) 곡선 | 🌈 동일 용량대 밴딩(CAMBI) 비교 | 🗂️ 20개 전 클립 RD 그리드 (PSNR·SSIM·VMAF) |
+| :---: | :---: | :---: | :---: |
+| [<img src="assets/benchmark/figures/ko/bd_rate_vs_gifski.png" width="210" alt="BD-rate vs gifski">](assets/benchmark/BENCHMARK.ko.md) | [<img src="assets/benchmark/figures/ko/rd_representative.png" width="210" alt="대표 RD 곡선">](assets/experiments/experiments.ko.md) | [<img src="assets/benchmark/figures/ko/cambi_per_clip.png" width="210" alt="클립별 CAMBI">](assets/experiments/experiments.ko.md) | [<img src="assets/benchmark/figures/ko/rd_ssim_grid.png" width="210" alt="20클립 RD 그리드">](assets/benchmark/figures/ko/rd_ssim_grid.png) |
+| [🇰🇷 KO 차트](assets/benchmark/figures/ko/bd_rate_vs_gifski.png) · [🇺🇸 EN](assets/benchmark/figures/en/bd_rate_vs_gifski.png) | [🇰🇷 KO 차트](assets/benchmark/figures/ko/rd_representative.png) · [🇺🇸 EN](assets/benchmark/figures/en/rd_representative.png) | [🇰🇷 KO 차트](assets/benchmark/figures/ko/cambi_per_clip.png) · [🇺🇸 EN](assets/benchmark/figures/en/cambi_per_clip.png) | 🇰🇷 [PSNR](assets/benchmark/figures/ko/rd_psnr_grid.png) · [SSIM](assets/benchmark/figures/ko/rd_ssim_grid.png) · [VMAF](assets/benchmark/figures/ko/rd_vmaf_grid.png)<br>🇺🇸 [PSNR](assets/benchmark/figures/en/rd_psnr_grid.png) · [SSIM](assets/benchmark/figures/en/rd_ssim_grid.png) · [VMAF](assets/benchmark/figures/en/rd_vmaf_grid.png) |
+
+### 🧪 20-Clip 핵심 결과 요약
+
+| 비교 대상 / 분석 항목 | 측정 지표 | 핵심 수치 (20개 클립 중앙값) | 비고 및 분석 결론 |
+| :--- | :--- | :---: | :--- |
+| **`FFmpeg 2-pass` 대비** | 용량 비율 / Flicker | 용량 **25% (약 4.0× 축소)** · Flicker **2.06 → 0.11** | 전 구간 20개 클립 중앙값 기준 명확한 압축·안정성 우위 |
+| **`gifsicle --lossy` 대비** | BD-rate (PSNR / SSIM) | PSNR **-32.4%** (20/20 우위) · SSIM **-53.6%** (19/19 우위) | 오차 확산 디더가 박힌 뒤 LZW만 근사하는 후처리 대비 전승 ($p < 0.001$) |
+| **`gifski 1.34` 대비 (구조·시간)** | BD-rate (SSIM) / Flicker | SSIM **-39.9%** (20/20 우위) · Flicker **0.109 vs 0.247** (17/20 우위) | 고주파 디더 노이즈 억제 및 정적 영역 시간 안정성에서 일관된 우위 |
+| **`gifski 1.34` 대비 (화소·지각)** | BD-rate (PSNR / VMAF) / CAMBI | PSNR **+8.8%** ($p=0.13$) · VMAF **+41.8%** · CAMBI **1.08 vs 0.035** | 현재 Bayer 디더 강도 `int16` 절삭 이슈로 디더링이 사실상 꺼져 계조 밴딩 열세 발생 (차기 패치 1순위) |
+| **동일 용량 어블레이션 1위** | ⑤ 허용오차 유지 판정 (`keep`) | 제거 시 `Q=45` 용량 **+65.9%** 폭증 · 동일 용량 $\Delta\text{TDE}$ **+0.150** 악화 | 디코더 캔버스 기준 폐루프 조건부 갱신이 전체 압축 효율에 가장 크게 기여 |
+
+> 📂 **재현 데이터 및 스크립트:** 측정 원시 데이터([`assets/data/`](assets/data))와 벤치마크·어블레이션 재현 코드([`assets/code/`](assets/code))가 저장소에 함께 포함되어 있습니다.
+
+---
+
+<a id="license"></a>
 ## 📄 라이선스
 본 프로젝트는 **MIT License** 하에 배포됩니다. 자세한 내용은 [`LICENSE`](LICENSE) 파일을 참고하세요.

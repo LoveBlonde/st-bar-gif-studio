@@ -16,6 +16,22 @@
 
 ---
 
+## 📑 Table of Contents
+
+1. [🖼️ Visual Guides & Deep-Dive Slides](#visual-slides)
+2. [🌟 Overview (Technical Background)](#overview)
+3. [📊 Benchmark 1: Real-World Game & Screen Captures (`.gif` Compression)](#benchmark-gif)
+4. [📊 Benchmark 2: Animated WebP Optimization (`ST-BAR v4` vs `libwebp`)](#benchmark-webp)
+5. [🧠 Core Algorithmic Architecture (Code-Verified Specification)](#architecture)
+   - [5.1 Signed Spatial Box Residual & Patchwork Anchor Tracking (`stabilize_pure_u8_fast`)](#arch-box-residual)
+   - [5.2 ST-GIF v3 Three-Step Quantization & Closed-Loop LZW-RDO Pipeline (`st_gif_codec.py`)](#arch-st-gif-v3)
+6. [🚀 Quick Start (GUI & CLI)](#quickstart)
+7. [🔬 In-Depth Research & Paper Experiments (`Benchmark` & `Experiments`)](#research-experiments)
+8. [📄 License](#license)
+
+---
+
+<a id="visual-slides"></a>
 ## 🖼️ Visual Guides & Deep-Dive Slides (Click to View Full Deck)
 
 Click any thumbnail or link below to view the full visual slide deck:
@@ -27,6 +43,7 @@ Click any thumbnail or link below to view the full visual slide deck:
 
 ---
 
+<a id="overview"></a>
 ## 🌟 Overview (Technical Background)
 
 Standard animated image encoders—such as **FFmpeg (`palettegen + paletteuse`)**, **Pillow**, and **`libwebp` (`WebPAnimEncoder`)**—rely on greedy pairwise frame differencing ($I_t$ vs $I_{t-1}$ with zero or $\pm 4$ tolerance) and error-diffusion dithering (Floyd-Steinberg / Sierra). When applied to real-world game captures or screen recordings containing subtle sensor/compression jitter ($\pm 1 \sim 3$ RGB), standard encoders suffer from three catastrophic inefficiencies:
@@ -38,6 +55,7 @@ Standard animated image encoders—such as **FFmpeg (`palettegen + paletteuse`)*
 
 ---
 
+<a id="benchmark-gif"></a>
 ## 📊 Benchmark 1: Real-World Game & Screen Captures (`.gif` Compression)
 
 Tested on high-resolution real-world game and screen captures against **Pillow (`optimize=True`)** and **FFmpeg's Gold-Standard 2-Pass Pipeline (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)**:
@@ -69,6 +87,7 @@ Tested on high-resolution real-world game and screen captures against **Pillow (
 
 ---
 
+<a id="benchmark-webp"></a>
 ## 📊 Benchmark 2: Animated WebP Optimization (`ST-BAR v4` vs `libwebp`)
 
 ![ST-BAR v4 Benchmark Chart](../assets/st_bar_benchmark_chart.png)
@@ -80,6 +99,7 @@ Tested on high-resolution real-world game and screen captures against **Pillow (
 
 ---
 
+<a id="architecture"></a>
 ## 🧠 Core Algorithmic Architecture (Code-Verified Specification)
 
 ```mermaid
@@ -95,6 +115,7 @@ flowchart TD
     I --> J["Direct RIFF WEBP (VP8X + ANIM + ANMF) Bitstream Assembler"]
 ```
 
+<a id="arch-box-residual"></a>
 ### 1. Signed Spatial Box Residual & Patchwork Anchor Tracking (`stabilize_pure_u8_fast`)
 Zero-mean sensor/compression noise $\eta \sim \mathcal{N}(0, \sigma^2)$ cancels out over a $5\times 5$ spatial window ($N=25$) when summed **with sign preserved** ($\sigma_{\text{mean}} = \sigma / 5$), whereas true object motion shifts local pixels coherently in the same direction. Instead of comparing against the immediately preceding frame $t-1$, ST-BAR maintains a persistent **Anchor Canvas $A$** and an incrementally patched **Anchor Box Mean $B_{\text{anchor}}$** (updated via `cv2.copyTo(box_clean[t], dilated_u8, box_anchor)` only over dilated active motion regions):
 
@@ -102,6 +123,7 @@ $$\text{Box}(C_t - A) = \text{Box}(C_t) - \text{Box}(A) \approx \text{Box}(C_t) 
 
 Combined with a 3-tap lookahead spike gate (`t+1` return check) and $3\times 3$ neighbor filtering, coherent motion is isolated in pure 8-bit SIMD (`cv2.boxFilter` + `cv2.absdiff`). For `.gif` (`anisotropic_smooth=True`), a conditional $1\times 3$ horizontal box filter is applied prior to motion detection to pre-smooth horizontal scanlines for LZW.
 
+<a id="arch-st-gif-v3"></a>
 ### 2. ST-GIF v3 Three-Step Quantization & Closed-Loop LZW-RDO Pipeline (`st_gif_codec.py`)
 
 #### Step 2a. Screen-Locked Conditional $4\times 4$ Bayer Dithering (`quantize_frame_with_locked_bayer`)
@@ -127,6 +149,7 @@ Finally, two morphological cleanup passes revert isolated updates back to `keep 
 
 ---
 
+<a id="quickstart"></a>
 ## 🚀 Quick Start
 
 ### 1. Installation
@@ -156,5 +179,36 @@ python main.py -i input.mp4 -o output.webp -q 80
 
 ---
 
+<a id="research-experiments"></a>
+## 🔬 In-Depth Research & Paper Experiments (`Benchmark` & `Experiments`)
+
+Systematic evaluation across **20 stratified real screen/game capture clips (260 encoding runs)** comparing **ST-GIF v3** against **`gifski 1.34` · `gifsicle 1.94 (-O3 --lossy)` · `FFmpeg 6.1.1 2-pass`** using Rate-Distortion (RD) curves, **BD-rate**, perceptual quality (**VMAF / VMAF-NEG**), banding (**CAMBI**), temporal stability (**Flicker / TDE**), and **equal-size component ablation**:
+
+| 📘 Full Benchmark Report (`Benchmark`) | 📙 Paper Section 4 Draft (`Experiments`) |
+| :---: | :---: |
+| 👉 **[🇺🇸 English Benchmark Report (`BENCHMARK.en.md`)](../assets/benchmark/BENCHMARK.en.md)**<br><sub>([🇰🇷 한국어 버전 (`BENCHMARK.ko.md`)](../assets/benchmark/BENCHMARK.ko.md))</sub> | 👉 **[🇺🇸 English Paper Experiments (`experiments.en.md`)](../assets/experiments/experiments.en.md)**<br><sub>([🇰🇷 한국어 버전 (`experiments.ko.md`)](../assets/experiments/experiments.ko.md))</sub> |
+
+### 📈 Key Experimental Figures (Click to View Full Charts & Reports)
+
+| 📊 Per-Clip BD-rate vs `gifski` | 📉 Representative RD Curves | 🌈 Matched-Size Banding (CAMBI) | 🗂️ Full 20-Clip RD Grids (PSNR·SSIM·VMAF) |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/benchmark/figures/en/bd_rate_vs_gifski.png" width="210" alt="BD-rate vs gifski">](../assets/benchmark/BENCHMARK.en.md) | [<img src="../assets/benchmark/figures/en/rd_representative.png" width="210" alt="Representative RD curves">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/cambi_per_clip.png" width="210" alt="Per-clip CAMBI">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/rd_ssim_grid.png" width="210" alt="20-clip RD grid">](../assets/benchmark/figures/en/rd_ssim_grid.png) |
+| [🇺🇸 EN Chart](../assets/benchmark/figures/en/bd_rate_vs_gifski.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/bd_rate_vs_gifski.png) | [🇺🇸 EN Chart](../assets/benchmark/figures/en/rd_representative.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/rd_representative.png) | [🇺🇸 EN Chart](../assets/benchmark/figures/en/cambi_per_clip.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/cambi_per_clip.png) | 🇺🇸 [PSNR](../assets/benchmark/figures/en/rd_psnr_grid.png) · [SSIM](../assets/benchmark/figures/en/rd_ssim_grid.png) · [VMAF](../assets/benchmark/figures/en/rd_vmaf_grid.png)<br>🇰🇷 [PSNR](../assets/benchmark/figures/ko/rd_psnr_grid.png) · [SSIM](../assets/benchmark/figures/ko/rd_ssim_grid.png) · [VMAF](../assets/benchmark/figures/ko/rd_vmaf_grid.png) |
+
+### 🧪 20-Clip Key Findings Summary
+
+| Baseline / Analysis | Metric | Median Result (20 Clips) | Key Takeaway |
+| :--- | :--- | :---: | :--- |
+| **vs `FFmpeg 2-pass`** | Size Ratio / Flicker | **25% size (≈4.0× smaller)** · Flicker **2.06 → 0.11** | Clear size and temporal stability advantage across all 20 stratified clips |
+| **vs `gifsicle --lossy`** | BD-rate (PSNR / SSIM) | PSNR **-32.4%** (wins 20/20) · SSIM **-53.6%** (wins 19/19) | Outperforms LZW-only lossy post-processing on every clip ($p < 0.001$) |
+| **vs `gifski 1.34` (Structure & Time)** | BD-rate (SSIM) / Flicker | SSIM **-39.9%** (wins 20/20) · Flicker **0.109 vs 0.247** (wins 17/20) | Strong structural preservation and static-region stability without high-frequency dither noise |
+| **vs `gifski 1.34` (Pixel & Banding)** | BD-rate (PSNR / VMAF) / CAMBI | PSNR **+8.8%** ($p=0.13$) · VMAF **+41.8%** · CAMBI **1.08 vs 0.035** | `int16` truncation of Bayer dither strength leaves dithering inactive, causing gradient banding (top priority fix) |
+| **Top Ablation Contributor** | ⑤ Tolerance-based `keep` | Removing grows `Q=45` size by **+65.9%** · worsens $\Delta\text{TDE}$ by **+0.150** | Closed-loop conditional replenishment against decoder canvas is the largest efficiency driver |
+
+> 📂 **Raw Data & Reproduction Scripts:** Full JSONL/CSV measurement logs ([`assets/data/`](../assets/data)) and benchmark/ablation reproduction scripts ([`assets/code/`](../assets/code)) are included in the repository.
+
+---
+
+<a id="license"></a>
 ## 📄 License
 Distributed under the **MIT License**. See [`LICENSE`](../LICENSE) for details.

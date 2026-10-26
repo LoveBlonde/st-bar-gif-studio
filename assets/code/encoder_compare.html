@@ -1,0 +1,130 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+:root{--ink:#1d2030;--sub:#4a4f63;--mute:#9aa0b0;--line:#e3e6ee;--bg:#f6f7fb;--card:#fff;
+--ff:#e5484d;--gs:#f76b15;--sk:#8e4ec6;--st:#12a594;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:2000px;word-break:keep-all;overflow-wrap:break-word;background:var(--bg);font-family:"Noto Sans CJK KR","Noto Sans CJK JP",sans-serif;color:var(--ink);}
+.top{height:8px;background:var(--ink)}
+.wrap{padding:44px 70px 34px}
+h1{font-size:46px;font-weight:900;letter-spacing:-0.5px}
+.subt{margin-top:14px;font-size:23px;color:var(--sub);line-height:1.55}
+.stages{display:flex;gap:8px;margin-top:14px;font-size:20px;color:var(--sub);align-items:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-weight:700;color:var(--ink)}
+.arrow{color:var(--mute)}
+table{width:100%;border-collapse:separate;border-spacing:0 10px;margin-top:26px;table-layout:fixed}
+thead th{background:var(--ink);color:#fff;font-size:21px;font-weight:700;text-align:left;padding:16px 16px}
+thead th:first-child{border-radius:12px 0 0 12px}
+thead th:last-child{border-radius:0 12px 12px 0}
+td{background:var(--card);vertical-align:top;padding:16px 16px;font-size:18.5px;line-height:1.5;color:var(--sub);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+td.enc{border-left:7px solid var(--c);border-radius:12px 0 0 12px}
+td.enc b{display:block;font-size:24px;color:var(--ink);font-weight:900}
+td.enc span{display:block;margin-top:6px;font-size:16px;color:var(--mute);font-family:"DejaVu Sans Mono",monospace;line-height:1.4}
+td.key{background:color-mix(in srgb,var(--c) 9%,#fff);color:var(--ink);font-weight:500;box-shadow:inset 0 -4px 0 var(--c)}
+td.key::before{content:"★ ";color:var(--c);font-weight:900}
+td.none{background:#f1f2f6;color:var(--mute);font-style:normal}
+tr.ff{--c:var(--ff)} tr.gs{--c:var(--gs)} tr.sk{--c:var(--sk)} tr.st{--c:var(--st)}
+tr.st td{border-top:2px solid var(--st);border-bottom:2px solid var(--st)}
+tr.st td:last-child{border-right:2px solid var(--st)}
+.legend{display:flex;gap:28px;font-size:18px;color:var(--sub);margin-top:4px}
+.legend i{display:inline-block;width:22px;height:16px;border-radius:4px;vertical-align:-2px;margin-right:8px}
+.bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;border-top:6px solid var(--c)}
+.box h3{font-size:21px;font-weight:900;margin-bottom:10px}
+.box p{font-size:19px;line-height:1.55;color:var(--sub)}
+.box q{display:block;font-size:21px;font-weight:700;color:var(--c);margin:4px 0 8px;quotes:none}
+.trade{margin-top:16px;background:#fff8ec;border:1px solid #f5d9a8;border-radius:12px;padding:14px 22px;font-size:19px;color:#6b4a12;line-height:1.5}
+.foot{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:22px;padding-top:14px;font-size:16px;color:var(--mute)}
+</style></head>
+<body><div class="top"></div><div class="wrap" id="root"></div>
+<script>
+const T={
+ko:{
+title:"FFmpeg · gifsicle · gifski · ST-GIF: 어디서 용량을 줄이나",
+subt:"움짤 GIF는 아래 5단계를 거쳐 만들어집니다. 네 인코더가 <b>어느 단계</b>에서 용량을 줄이는지 나란히 비교했습니다.",
+stages:["① 노이즈 처리","② 팔레트","③ 디더링","④ 프레임 델타 (투명 판정)","⑤ LZW 부호화"],
+head:["인코더","① 노이즈 처리","② 팔레트","③ 디더링","④ 프레임 델타","⑤ LZW 부호화"],
+rows:[
+ ["ff","FFmpeg 2-pass","palettegen + paletteuse",[
+  ["none","없음"],
+  ["","영상 전체에서 256색 팔레트 1개<br>(stats_mode=diff)"],
+  ["","sierra2_4a 오차 확산<br>입력이 조금만 달라도 무늬가 바뀜"],
+  ["","직전 프레임과 인덱스가 <b>정확히 같을 때만</b> 투명 + 변경 사각형 크롭"],
+  ["","표준 LZW (무손실)"]]],
+ ["gs","gifsicle","-O3 --lossy=N (후처리기)",[
+  ["none span3","손대지 않음 — 입력 GIF(예: FFmpeg 결과물)의 팔레트·디더 무늬를 그대로 사용"],
+  ["","-O3: 변경 영역 크롭 + 같은 픽셀 투명 처리 (정확 일치)"],
+  ["key","<b>손실 LZW</b>: 사전에서 '충분히 비슷한' 가장 긴 문자열을 골라 코드 수를 줄임"]]],
+ ["sk","gifski","pngquant 기반",[
+  ["key","시간축 노이즈 제거·스무딩"],
+  ["","프레임별 고품질 팔레트<br>(pngquant)"],
+  ["key","시간축 디더링<br>프레임 간 무늬 일관성 유지"],
+  ["","변하지 않은 픽셀 투명 처리"],
+  ["key","<b>손실 LZW</b><br>(--lossy-quality)"]]],
+ ["st","ST-GIF v3 (Ours)","st_gif_codec.py",[
+  ["key","3-tap 시간 필터 + <b>앵커 프레임</b>: 실제 움직임만 갱신, 나머지는 고정"],
+  ["","움직임 가중 전역 256색<br>+ 64³ 3D LUT"],
+  ["key","<b>화면 좌표 고정</b> 4×4 Bayer<br>매 프레임 같은 무늬 (오차 큰 픽셀만)"],
+  ["key","<b>디코더 화면 기준</b> 폐루프 판정: 오차가 허용치 이내거나 개선폭이 작으면 유지 + 1–2px 잡점 제거"],
+  ["key","LZW <b>이전에</b> 런 병합 (2→4→8 블록 앵커, 허용오차 이내) → 표준 LZW"]]]
+],
+legend:["★ 용량을 줄이는 핵심 단계","처리하지 않음"],
+boxes:[
+ ["ff","FFmpeg · gifsicle -O3","“같은 픽셀인가?”","정확히 일치해야 재사용합니다. 녹화 노이즈(±1~3)가 있으면 거의 모든 픽셀이 '변경'으로 잡혀 매 프레임을 다시 씁니다."],
+ ["gs","gifsicle --lossy · gifski","“부호화를 근사하자”","LZW 단계에서 근사해 용량을 줄입니다. gifsicle은 이미 박힌 노이즈·디더 무늬를 그대로 둔 채 부호화만 줄입니다."],
+ ["st","ST-GIF (Ours)","“화면과 충분히 가까운가?”","보는 사람 화면(디코더 캔버스)과 비교해, 부호화 <b>전에</b> 무엇을 다시 쓸지 결정합니다. 바뀌지 않은 곳은 긴 투명 런이 됩니다."]],
+trade:"<b>대가:</b> 허용오차 안의 미세한 변화를 의도적으로 버리기 때문에 원본 대비 최고 화질(PSNR)에 상한이 생깁니다. 실측에서는 Q=100에서도 약 42 dB에 머문 클립이 있었습니다.",
+foot:["FFmpeg palettegen/paletteuse · gifsicle 1.94 · gifski 1.34 · ST-GIF v3","ST-BAR GIF Studio · 인코더 비교 개요"]
+},
+en:{
+title:"FFmpeg · gifsicle · gifski · ST-GIF: Where Does Each Save Bytes?",
+subt:"An animated GIF is built in the five stages below. This chart lines up <b>which stage</b> each encoder uses to shrink the file.",
+stages:["① Noise handling","② Palette","③ Dithering","④ Frame delta (transparency)","⑤ LZW coding"],
+head:["Encoder","① Noise handling","② Palette","③ Dithering","④ Frame delta","⑤ LZW coding"],
+rows:[
+ ["ff","FFmpeg 2-pass","palettegen + paletteuse",[
+  ["none","None"],
+  ["","One 256-color palette for the whole clip<br>(stats_mode=diff)"],
+  ["","sierra2_4a error diffusion<br>pattern changes whenever input changes"],
+  ["","Transparent only if the index is <b>exactly equal</b> to the previous frame + crop to changed rectangle"],
+  ["","Standard LZW (lossless)"]]],
+ ["gs","gifsicle","-O3 --lossy=N (post-processor)",[
+  ["none span3","Untouched — keeps the palette and dither pattern of the input GIF (e.g. FFmpeg output)"],
+  ["","-O3: crop changed area + make identical pixels transparent (exact match)"],
+  ["key","<b>Lossy LZW</b>: picks the longest dictionary string that is 'close enough', so fewer codes are emitted"]]],
+ ["sk","gifski","pngquant-based",[
+  ["key","Temporal denoising and smoothing"],
+  ["","High-quality palette per frame<br>(pngquant)"],
+  ["key","Temporal dithering<br>keeps pattern consistent across frames"],
+  ["","Unchanged pixels made transparent"],
+  ["key","<b>Lossy LZW</b><br>(--lossy-quality)"]]],
+ ["st","ST-GIF v3 (Ours)","st_gif_codec.py",[
+  ["key","3-tap temporal filter + <b>anchor frame</b>: only real motion is updated, the rest is locked"],
+  ["","Motion-weighted global 256 colors<br>+ 64³ 3D LUT"],
+  ["key","<b>Screen-locked</b> 4×4 Bayer<br>same pattern every frame (high-error pixels only)"],
+  ["key","Closed-loop decision <b>against the decoder canvas</b>: keep if error is within tolerance or gain is small + remove 1–2 px specks"],
+  ["key","Run coalescing <b>before</b> LZW (2→4→8 block anchors within tolerance) → standard LZW"]]]
+],
+legend:["★ Main stage where bytes are saved","Not processed"],
+boxes:[
+ ["ff","FFmpeg · gifsicle -O3","“Is it the same pixel?”","Reuse requires an exact match. With capture noise of ±1–3, almost every pixel counts as 'changed', so each frame is rewritten."],
+ ["gs","gifsicle --lossy · gifski","“Approximate the coding”","Bytes are saved by approximating at the LZW stage. gifsicle shrinks the coding only, leaving baked-in noise and dither pattern as they are."],
+ ["st","ST-GIF (Ours)","“Close enough to the screen?”","Compares against what the viewer actually sees (decoder canvas) and decides what to rewrite <b>before</b> coding. Unchanged areas become long transparent runs."]],
+trade:"<b>Trade-off:</b> small changes inside the tolerance are dropped on purpose, so peak fidelity to the source (PSNR) is capped. In our measurements one clip stayed near 42 dB even at Q=100.",
+foot:["FFmpeg palettegen/paletteuse · gifsicle 1.94 · gifski 1.34 · ST-GIF v3","ST-BAR GIF Studio · Encoder overview"]
+}};
+const L=(new URLSearchParams(location.search)).get("lang")||"ko";const t=T[L];
+document.documentElement.lang=L;
+let h=`<h1>${t.title}</h1><p class="subt">${t.subt}</p><div class="stages">`+
+ t.stages.map((s,i)=>`<span class="chip">${s}</span>`+(i<4?`<span class="arrow">→</span>`:"")).join("")+`</div>`;
+h+=`<table><colgroup><col style="width:15%"><col style="width:17%"><col style="width:15.5%"><col style="width:17%"><col style="width:18.5%"><col style="width:17%"></colgroup><thead><tr>`+t.head.map(x=>`<th>${x}</th>`).join("")+`</tr></thead><tbody>`;
+for(const [k,name,sub,cells] of t.rows){
+ h+=`<tr class="${k}"><td class="enc"><b>${name}</b><span>${sub}</span></td>`;
+ for(const [cls,txt] of cells){const span=cls.includes("span3")?' colspan="3"':"";h+=`<td class="${cls.replace("span3","")}"${span}>${txt}</td>`;}
+ h+=`</tr>`;}
+h+=`</tbody></table><div class="legend"><span><i style="background:color-mix(in srgb,#12a594 14%,#fff);box-shadow:inset 0 -4px 0 #12a594"></i>${t.legend[0]}</span><span><i style="background:#f1f2f6;border:1px solid #e3e6ee"></i>${t.legend[1]}</span></div>`;
+h+=`<div class="bottom">`+t.boxes.map(([k,a,q,p])=>`<div class="box" style="--c:var(--${k})"><h3>${a}</h3><q>${q}</q><p>${p}</p></div>`).join("")+`</div>`;
+h+=`<div class="trade">${t.trade}</div><div class="foot"><span>${t.foot[0]}</span><span>${t.foot[1]}</span></div>`;
+document.getElementById("root").innerHTML=h;
+</script></body></html>

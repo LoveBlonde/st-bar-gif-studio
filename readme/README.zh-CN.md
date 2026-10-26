@@ -16,6 +16,20 @@
 
 ---
 
+## 📑 目录 (Table of Contents)
+
+1. [🖼️ 视觉化原理解析与深度对比图集](#visual-slides)
+2. [🌟 研究背景与核心成果 (Overview)](#overview)
+3. [📊 基准测试 1：真实游戏与屏幕录制 (`.gif` 压缩对比)](#benchmark-gif)
+4. [📊 基准测试 2：Animated WebP 优化 (`ST-BAR v4` vs `libwebp`)](#benchmark-webp)
+5. [🧠 核心数学模型与算法架构（代码级验证规范）](#architecture)
+6. [🚀 快速开始 (Quick Start)](#quickstart)
+7. [🔬 深度研究结果与论文实验报告 (`Benchmark` & `Experiments`)](#research-experiments)
+8. [📄 开源协议 (License)](#license)
+
+---
+
+<a id="visual-slides"></a>
 ## 🖼️ 视觉化原理解析与深度对比图集（点击缩略图查看完整图集）
 
 | 🟢 通俗原理解析（5页） | 📊 四大 GIF 编码器全景对比 | ⚖️ 传统编码器 vs ST 1:1 对比（C1–C4） | 🟣 代码级深度解析（9页） |
@@ -25,6 +39,7 @@
 
 ---
 
+<a id="overview"></a>
 ## 🌟 研究背景与核心成果 (Overview)
 
 传统的动图编码器——例如 **FFmpeg (`palettegen + paletteuse`)**、**Pillow** 以及 **`libwebp` (`WebPAnimEncoder`)**——依赖于贪婪的相邻帧逐像素差分（$I_t$ vs $I_{t-1}$，零容差或 $\pm 4$）以及误差扩散抖动（Floyd-Steinberg / Sierra）。当处理包含细微传感器噪点或视频压缩伪影（$\pm 1 \sim 3$ RGB）的真实游戏录屏或屏幕捕获时，传统编码器会出现三个灾难性的效率瓶颈：
@@ -37,6 +52,7 @@
 
 ---
 
+<a id="benchmark-gif"></a>
 ## 📊 基准测试 1：真实游戏与屏幕录制 (`.gif` 压缩对比)
 
 在真实高分辨率游戏与屏幕捕获素材上，与 **Pillow (`optimize=True`)** 及 **FFmpeg 黄金标准双通道管线 (`palettegen + paletteuse=dither=sierra2_4a:diff_mode=rectangle`)** 进行对比：
@@ -68,6 +84,7 @@
 
 ---
 
+<a id="benchmark-webp"></a>
 ## 📊 基准测试 2：Animated WebP 优化 (`ST-BAR v4` vs `libwebp`)
 
 ![ST-BAR v4 Benchmark Chart](../assets/st_bar_benchmark_chart.png)
@@ -79,6 +96,7 @@
 
 ---
 
+<a id="architecture"></a>
 ## 🧠 核心数学模型与算法架构（代码级验证规范）
 
 ```mermaid
@@ -120,6 +138,7 @@ $$\text{keep}(x,y) = \neg\text{active}_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \ha
 
 ---
 
+<a id="quickstart"></a>
 ## 🚀 快速开始 (Quick Start)
 
 ```bash
@@ -131,5 +150,22 @@ python main.py
 
 ---
 
+<a id="research-experiments"></a>
+## 🔬 深度研究结果与论文实验报告 (`Benchmark` & `Experiments`)
+
+基于 **20 个分层抽样真实屏幕/游戏录制片段（共 260 次编码测试）**，对 **ST-GIF v3** 与 **`gifski 1.34` · `gifsicle 1.94 (-O3 --lossy)` · `FFmpeg 6.1.1 2-pass`** 进行了率失真（RD）曲线、**BD-rate**、感知质量（**VMAF / VMAF-NEG**）、色带伪影（**CAMBI**）、时域稳定性（**Flicker / TDE**）及 **等体积消融实验（Ablation）** 的系统评测：
+
+| 📘 完整基准测试报告 (`Benchmark`) | 📙 论文第 4 节实验初稿 (`Experiments`) |
+| :---: | :---: |
+| 👉 **[🇺🇸 English Benchmark Report (`BENCHMARK.en.md`)](../assets/benchmark/BENCHMARK.en.md)**<br><sub>([🇰🇷 한국어 (`BENCHMARK.ko.md`)](../assets/benchmark/BENCHMARK.ko.md))</sub> | 👉 **[🇺🇸 English Paper Experiments (`experiments.en.md`)](../assets/experiments/experiments.en.md)**<br><sub>([🇰🇷 한국어 (`experiments.ko.md`)](../assets/experiments/experiments.ko.md))</sub> |
+
+| 📊 各片段对比 `gifski` 的 BD-rate | 📉 代表性片段 RD 曲线 | 🌈 同等体积色带指标 (CAMBI) | 🗂️ 20 片段完整 RD 网格 (PSNR·SSIM·VMAF) |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/benchmark/figures/en/bd_rate_vs_gifski.png" width="210" alt="BD-rate vs gifski">](../assets/benchmark/BENCHMARK.en.md) | [<img src="../assets/benchmark/figures/en/rd_representative.png" width="210" alt="Representative RD curves">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/cambi_per_clip.png" width="210" alt="Per-clip CAMBI">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/rd_ssim_grid.png" width="210" alt="20-clip RD grid">](../assets/benchmark/figures/en/rd_ssim_grid.png) |
+| [🇺🇸 EN](../assets/benchmark/figures/en/bd_rate_vs_gifski.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/bd_rate_vs_gifski.png) | [🇺🇸 EN](../assets/benchmark/figures/en/rd_representative.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/rd_representative.png) | [🇺🇸 EN](../assets/benchmark/figures/en/cambi_per_clip.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/cambi_per_clip.png) | 🇺🇸 [PSNR](../assets/benchmark/figures/en/rd_psnr_grid.png) · [SSIM](../assets/benchmark/figures/en/rd_ssim_grid.png) · [VMAF](../assets/benchmark/figures/en/rd_vmaf_grid.png) |
+
+---
+
+<a id="license"></a>
 ## 📄 开源协议 (License)
 本项目基于 **MIT License** 分发。详情请参阅 [`LICENSE`](../LICENSE) 文件。

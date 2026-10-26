@@ -16,6 +16,20 @@
 
 ---
 
+## 📑 Tabla de Contenidos (Table of Contents)
+
+1. [🖼️ Guías Visuales y Comparativas en Profundidad](#visual-slides)
+2. [🌟 Resumen y Logros Principales (Overview)](#overview)
+3. [📊 Benchmark 1: Capturas Reales de Videojuegos y Pantalla (Compresión `.gif`)](#benchmark-gif)
+4. [📊 Benchmark 2: Optimización de Animated WebP (`ST-BAR v4` vs `libwebp`)](#benchmark-webp)
+5. [🧠 Arquitectura Algorítmica Principal (Especificación Verificada en Código)](#architecture)
+6. [🚀 Inicio Rápido (Quick Start)](#quickstart)
+7. [🔬 Resultados de Investigación y Experimentos del Artículo (`Benchmark` & `Experiments`)](#research-experiments)
+8. [📄 Licencia (License)](#license)
+
+---
+
+<a id="visual-slides"></a>
 ## 🖼️ Guías Visuales y Comparativas en Profundidad (Haz clic para ver las presentaciones)
 
 | 🟢 Explicación Visual (5 Diap.) | 📊 Matriz de 4 Codificadores GIF | ⚖️ Comparativa 1:1 (C1–C4) | 🟣 Análisis de Código (9 Diap.) |
@@ -25,6 +39,7 @@
 
 ---
 
+<a id="overview"></a>
 ## 🌟 Resumen y Logros Principales (Overview)
 
 Los codificadores de imágenes animadas estándar —como **FFmpeg (`palettegen + paletteuse`)**, **Pillow** y **`libwebp` (`WebPAnimEncoder`)**— dependen de la diferenciación voraz entre fotogramas adyacentes ($I_t$ vs $I_{t-1}$ con tolerancia cero o $\pm 4$) y del tramado por difusión de error (Floyd-Steinberg / Sierra). Al aplicarse a capturas reales de videojuegos o grabaciones de pantalla con ligero ruido de sensor o artefactos de compresión ($\pm 1 \sim 3$ RGB), sufren tres graves problemas de eficiencia:
@@ -37,6 +52,7 @@ Los codificadores de imágenes animadas estándar —como **FFmpeg (`palettegen 
 
 ---
 
+<a id="benchmark-gif"></a>
 ## 📊 Benchmark 1: Capturas Reales de Videojuegos y Pantalla (Compresión `.gif`)
 
 ![ST-GIF v3 Real-World Benchmark](../assets/st_gif_realworld_chart.png)
@@ -66,6 +82,7 @@ Los codificadores de imágenes animadas estándar —como **FFmpeg (`palettegen 
 
 ---
 
+<a id="benchmark-webp"></a>
 ## 📊 Benchmark 2: Optimización de Animated WebP (`ST-BAR v4` vs `libwebp`)
 
 ![ST-BAR v4 Benchmark Chart](../assets/st_bar_benchmark_chart.png)
@@ -74,6 +91,7 @@ Los codificadores de imágenes animadas estándar —como **FFmpeg (`palettegen 
 
 ---
 
+<a id="architecture"></a>
 ## 🧠 Arquitectura Algorítmica Principal (Especificación Verificada en Código)
 
 ### 1. Residuo Espacial de Caja con Signo y Seguimiento Incremental del Ancla (`stabilize_pure_u8_fast`)
@@ -96,6 +114,7 @@ $$\text{keep}(x,y) = \neg\text{active}_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \ha
 
 ---
 
+<a id="quickstart"></a>
 ## 🚀 Inicio Rápido (Quick Start)
 
 ```bash
@@ -107,5 +126,22 @@ python main.py
 
 ---
 
+<a id="research-experiments"></a>
+## 🔬 Resultados de Investigación y Experimentos del Artículo (`Benchmark` & `Experiments`)
+
+Evaluación sistemática en **20 clips reales estratificados de captura de pantalla/videojuegos (260 ejecuciones)** comparando **ST-GIF v3** frente a **`gifski 1.34` · `gifsicle 1.94 (-O3 --lossy)` · `FFmpeg 6.1.1 2-pass`** mediante curvas RD, **BD-rate**, calidad perceptual (**VMAF / VMAF-NEG**), banding (**CAMBI**), estabilidad temporal (**Flicker / TDE**) y **ablación de componentes a igual tamaño**:
+
+| 📘 Informe Completo de Benchmark (`Benchmark`) | 📙 Borrador de Experimentos del Artículo (`Experiments`) |
+| :---: | :---: |
+| 👉 **[🇺🇸 English Benchmark Report (`BENCHMARK.en.md`)](../assets/benchmark/BENCHMARK.en.md)**<br><sub>([🇰🇷 한국어 (`BENCHMARK.ko.md`)](../assets/benchmark/BENCHMARK.ko.md))</sub> | 👉 **[🇺🇸 English Paper Experiments (`experiments.en.md`)](../assets/experiments/experiments.en.md)**<br><sub>([🇰🇷 한국어 (`experiments.ko.md`)](../assets/experiments/experiments.ko.md))</sub> |
+
+| 📊 BD-rate por Clip vs `gifski` | 📉 Curvas RD Representativas | 🌈 Banding a Igual Tamaño (CAMBI) | 🗂️ Cuadrículas RD de 20 Clips (PSNR·SSIM·VMAF) |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/benchmark/figures/en/bd_rate_vs_gifski.png" width="210" alt="BD-rate vs gifski">](../assets/benchmark/BENCHMARK.en.md) | [<img src="../assets/benchmark/figures/en/rd_representative.png" width="210" alt="Representative RD curves">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/cambi_per_clip.png" width="210" alt="Per-clip CAMBI">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/rd_ssim_grid.png" width="210" alt="20-clip RD grid">](../assets/benchmark/figures/en/rd_ssim_grid.png) |
+| [🇺🇸 EN](../assets/benchmark/figures/en/bd_rate_vs_gifski.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/bd_rate_vs_gifski.png) | [🇺🇸 EN](../assets/benchmark/figures/en/rd_representative.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/rd_representative.png) | [🇺🇸 EN](../assets/benchmark/figures/en/cambi_per_clip.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/cambi_per_clip.png) | 🇺🇸 [PSNR](../assets/benchmark/figures/en/rd_psnr_grid.png) · [SSIM](../assets/benchmark/figures/en/rd_ssim_grid.png) · [VMAF](../assets/benchmark/figures/en/rd_vmaf_grid.png) |
+
+---
+
+<a id="license"></a>
 ## 📄 Licencia (License)
 Distribuido bajo la **Licencia MIT**. Consulta el archivo [`LICENSE`](../LICENSE) para más detalles.

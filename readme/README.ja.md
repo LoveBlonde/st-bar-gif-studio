@@ -16,6 +16,20 @@
 
 ---
 
+## 📑 目次 (Table of Contents)
+
+1. [🖼️ 図解スライド＆徹底比較ギャラリー](#visual-slides)
+2. [🌟 研究背景と主な成果 (Overview)](#overview)
+3. [📊 ベンチマーク 1：実際のゲーム・画面キャプチャ (`.gif` 圧縮比較)](#benchmark-gif)
+4. [📊 ベンチマーク 2：Animated WebP 最適化 (`ST-BAR v4` vs `libwebp`)](#benchmark-webp)
+5. [🧠 コア数理モデルとアルゴリズム構造（コード検証済み仕様）](#architecture)
+6. [🚀 クイックスタート (Quick Start)](#quickstart)
+7. [🔬 詳細研究結果＆論文実験レポート (`Benchmark` & `Experiments`)](#research-experiments)
+8. [📄 ライセンス (License)](#license)
+
+---
+
+<a id="visual-slides"></a>
 ## 🖼️ 図解スライド＆徹底比較ギャラリー（サムネイルをクリックして全スライドを表示）
 
 | 🟢 わかりやすい原理図解（5枚） | 📊 4大 GIF エンコーダ比較表 | ⚖️ 従来方式 vs ST 1:1 比較（C1–C4） | 🟣 コード深掘り解説（9枚） |
@@ -25,6 +39,7 @@
 
 ---
 
+<a id="overview"></a>
 ## 🌟 研究背景と主な成果 (Overview)
 
 従来のアニメーション画像エンコーダ（**FFmpeg (`palettegen + paletteuse`)**、**Pillow**、**`libwebp` (`WebPAnimEncoder`)** など）は、隣接フレーム間の単純なピクセル差分（$I_t$ vs $I_{t-1}$、許容誤差 0 または $\pm 4$）と誤差拡散ディザリング（Floyd-Steinberg / Sierra）に依存しています。微細なセンサーノイズや圧縮アーティファクト（$\pm 1 \sim 3$ RGB）を含む実際のゲーム録画や画面キャプチャに適用すると、以下の3つの致命的な非効率が発生します。
@@ -37,6 +52,7 @@
 
 ---
 
+<a id="benchmark-gif"></a>
 ## 📊 ベンチマーク 1：実際のゲーム・画面キャプチャ (`.gif` 圧縮比較)
 
 ![ST-GIF v3 Real-World Benchmark](../assets/st_gif_realworld_chart.png)
@@ -66,6 +82,7 @@
 
 ---
 
+<a id="benchmark-webp"></a>
 ## 📊 ベンチマーク 2：Animated WebP 最適化 (`ST-BAR v4` vs `libwebp`)
 
 ![ST-BAR v4 Benchmark Chart](../assets/st_bar_benchmark_chart.png)
@@ -74,6 +91,7 @@
 
 ---
 
+<a id="architecture"></a>
 ## 🧠 コア数理モデルとアルゴリズム構造（コード検証済み仕様）
 
 ### 1. 符号付き空間ボックス残差 ＆ パッチワーク・アンカー追跡 (`stabilize_pure_u8_fast`)
@@ -96,6 +114,7 @@ $$\text{keep}(x,y) = \neg\text{active}_t(x,y) \;\lor\; \big(\hat{p}_t(x,y) = \ha
 
 ---
 
+<a id="quickstart"></a>
 ## 🚀 クイックスタート (Quick Start)
 
 ```bash
@@ -107,5 +126,22 @@ python main.py
 
 ---
 
+<a id="research-experiments"></a>
+## 🔬 詳細研究結果＆論文実験レポート (`Benchmark` & `Experiments`)
+
+**20個の層化抽出された実画面・ゲーム録画クリップ（計260設定）**において、**ST-GIF v3** と **`gifski 1.34` · `gifsicle 1.94 (-O3 --lossy)` · `FFmpeg 6.1.1 2-pass`** を RD曲線、**BD-rate**、知覚品質（**VMAF / VMAF-NEG**）、バンディング（**CAMBI**）、時間的安定性（**Flicker / TDE**）、および **等サイズ・アブレーション実験** により体系的に評価したレポート＆図表です：
+
+| 📘 総合ベンチマークレポート (`Benchmark`) | 📙 論文第4章 実験セクション草稿 (`Experiments`) |
+| :---: | :---: |
+| 👉 **[🇺🇸 English Benchmark Report (`BENCHMARK.en.md`)](../assets/benchmark/BENCHMARK.en.md)**<br><sub>([🇰🇷 한국어 (`BENCHMARK.ko.md`)](../assets/benchmark/BENCHMARK.ko.md))</sub> | 👉 **[🇺🇸 English Paper Experiments (`experiments.en.md`)](../assets/experiments/experiments.en.md)**<br><sub>([🇰🇷 한국어 (`experiments.ko.md`)](../assets/experiments/experiments.ko.md))</sub> |
+
+| 📊 `gifski` 対比クリップ別 BD-rate | 📉 代表クリップの RD 曲線 | 🌈 同サイズ帯バンディング (CAMBI) | 🗂️ 全20クリップ RD グリッド (PSNR·SSIM·VMAF) |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/benchmark/figures/en/bd_rate_vs_gifski.png" width="210" alt="BD-rate vs gifski">](../assets/benchmark/BENCHMARK.en.md) | [<img src="../assets/benchmark/figures/en/rd_representative.png" width="210" alt="Representative RD curves">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/cambi_per_clip.png" width="210" alt="Per-clip CAMBI">](../assets/experiments/experiments.en.md) | [<img src="../assets/benchmark/figures/en/rd_ssim_grid.png" width="210" alt="20-clip RD grid">](../assets/benchmark/figures/en/rd_ssim_grid.png) |
+| [🇺🇸 EN](../assets/benchmark/figures/en/bd_rate_vs_gifski.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/bd_rate_vs_gifski.png) | [🇺🇸 EN](../assets/benchmark/figures/en/rd_representative.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/rd_representative.png) | [🇺🇸 EN](../assets/benchmark/figures/en/cambi_per_clip.png) · [🇰🇷 KO](../assets/benchmark/figures/ko/cambi_per_clip.png) | 🇺🇸 [PSNR](../assets/benchmark/figures/en/rd_psnr_grid.png) · [SSIM](../assets/benchmark/figures/en/rd_ssim_grid.png) · [VMAF](../assets/benchmark/figures/en/rd_vmaf_grid.png) |
+
+---
+
+<a id="license"></a>
 ## 📄 ライセンス (License)
 本プロジェクトは **MIT License** の下で公開されています。詳細は [`LICENSE`](../LICENSE) をご覧ください。
