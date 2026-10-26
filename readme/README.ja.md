@@ -18,10 +18,10 @@
 
 ## 🖼️ 図解スライド＆徹底比較ギャラリー（サムネイルをクリックして全スライドを表示）
 
-| 🟢 わかりやすい原理図解（全5枚） | ⚖️ 従来エンコーダ vs ST 1:1 実測比較（C1–C4） | 🟣 開発者・エンジニア向け深掘り解説（全9枚） |
-| :---: | :---: | :---: |
-| [<img src="../assets/explainer/en/explainer_en_1.png" width="270" alt="Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="270" alt="Compare Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="270" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
-| 👉 **[原理図解スライドを見る (EN)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/explainer/ko/README.md))</sub> | 👉 **[1:1 比較スライドを見る (EN)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/compare/ko/README.md))</sub> | 👉 **[コード深掘り解説を見る (EN)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/deepdive/ko/README.md))</sub> |
+| 🟢 わかりやすい原理図解（5枚） | 📊 4大 GIF エンコーダ比較表 | ⚖️ 従来方式 vs ST 1:1 比較（C1–C4） | 🟣 コード深掘り解説（9枚） |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/explainer/en/explainer_en_1.png" width="210" alt="Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/encoder_comparison/en/encoder_compare_en.png" width="210" alt="4-Encoder Thumbnail">](../assets/encoder_comparison/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="210" alt="Compare Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="210" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
+| 👉 **[原理図解スライド (EN)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 KO](../assets/explainer/ko/README.md))</sub> | 👉 **[4大エンコーダ比較 (EN)](../assets/encoder_comparison/en/README.md)**<br><sub>([🇰🇷 KO](../assets/encoder_comparison/ko/README.md))</sub> | 👉 **[1:1 比較スライド (EN)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 KO](../assets/compare/ko/README.md))</sub> | 👉 **[コード深掘り解説 (EN)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 KO](../assets/deepdive/ko/README.md))</sub> |
 
 ---
 

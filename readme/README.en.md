@@ -20,10 +20,10 @@
 
 Click any thumbnail or link below to view the full visual slide deck:
 
-| 🟢 Visual Explainer (5 Slides) | ⚖️ FFmpeg/libwebp vs ST 1:1 Comparison (C1–C4) | 🟣 Technical & Code Deep Dive (9 Slides) |
-| :---: | :---: | :---: |
-| [<img src="../assets/explainer/en/explainer_en_1.png" width="270" alt="Visual Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="270" alt="Comparison Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="270" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
-| 👉 **[View Visual Explainer (5 Slides)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 한국어 슬라이드](../assets/explainer/ko/README.md))</sub> | 👉 **[View 1:1 Baseline Comparison (4 Slides)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 한국어 슬라이드](../assets/compare/ko/README.md))</sub> | 👉 **[View Technical Deep Dive (9 Slides)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 한국어 슬라이드](../assets/deepdive/ko/README.md))</sub> |
+| 🟢 Visual Explainer (5 Slides) | 📊 4-Encoder Overview (FFmpeg·gifsicle·gifski·ST) | ⚖️ 1:1 Stage Comparison (C1–C4) | 🟣 Code Deep Dive (9 Slides) |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/explainer/en/explainer_en_1.png" width="210" alt="Visual Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/encoder_comparison/en/encoder_compare_en.png" width="210" alt="4-Encoder Comparison Thumbnail">](../assets/encoder_comparison/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="210" alt="Comparison Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="210" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
+| 👉 **[Visual Explainer (5 Slides)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 KO](../assets/explainer/ko/README.md))</sub> | 👉 **[4-Encoder 5-Stage Matrix](../assets/encoder_comparison/en/README.md)**<br><sub>([🇰🇷 KO](../assets/encoder_comparison/ko/README.md))</sub> | 👉 **[1:1 Baseline Comparison (4 Slides)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 KO](../assets/compare/ko/README.md))</sub> | 👉 **[Technical Deep Dive (9 Slides)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 KO](../assets/deepdive/ko/README.md))</sub> |
 
 ---
 

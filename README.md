@@ -20,10 +20,10 @@
 
 복잡한 수식을 읽기 전에 아래 썸네일이나 제목 링크를 클릭하면 목적별 슬라이드 전체를 한눈에 보실 수 있습니다:
 
-| 🟢 쉬운 원리 설명 (비전공자·일반용 5장) | ⚖️ 기존 인코더 vs ST 1:1 대조 (C1~C4) | 🟣 개발자·공대생용 코드 심층 분석 (1~9장) |
-| :---: | :---: | :---: |
-| [<img src="assets/explainer/ko/explainer_ko_1.png" width="270" alt="쉬운 설명 썸네일">](assets/explainer/ko/README.md) | [<img src="assets/compare/ko/compare_ko_1.png" width="270" alt="비교 분석 썸네일">](assets/compare/ko/README.md) | [<img src="assets/deepdive/ko/deepdive_ko_1.png" width="270" alt="심층 분석 썸네일">](assets/deepdive/ko/README.md) |
-| 👉 **[쉬운 설명 슬라이드 보기 (5장)](assets/explainer/ko/README.md)**<br><sub>([🇺🇸 English Slides](assets/explainer/en/README.md))</sub> | 👉 **[FFmpeg·libwebp 1:1 대조 보기 (4장)](assets/compare/ko/README.md)**<br><sub>([🇺🇸 English Slides](assets/compare/en/README.md))</sub> | 👉 **[수식·코드 심층 분석 보기 (9장)](assets/deepdive/ko/README.md)**<br><sub>([🇺🇸 English Slides](assets/deepdive/en/README.md))</sub> |
+| 🟢 쉬운 원리 설명 (5장) | 📊 4대 GIF 인코더 한눈 비교 | ⚖️ 기존 인코더 vs ST 대조 (C1~C4) | 🟣 코드·수식 심층 분석 (9장) |
+| :---: | :---: | :---: | :---: |
+| [<img src="assets/explainer/ko/explainer_ko_1.png" width="210" alt="쉬운 설명 썸네일">](assets/explainer/ko/README.md) | [<img src="assets/encoder_comparison/ko/encoder_compare_ko.png" width="210" alt="4대 인코더 비교 썸네일">](assets/encoder_comparison/ko/README.md) | [<img src="assets/compare/ko/compare_ko_1.png" width="210" alt="비교 분석 썸네일">](assets/compare/ko/README.md) | [<img src="assets/deepdive/ko/deepdive_ko_1.png" width="210" alt="심층 분석 썸네일">](assets/deepdive/ko/README.md) |
+| 👉 **[쉬운 설명 슬라이드 (5장)](assets/explainer/ko/README.md)**<br><sub>([🇺🇸 EN](assets/explainer/en/README.md))</sub> | 👉 **[FFmpeg·gifsicle·gifski 비교](assets/encoder_comparison/ko/README.md)**<br><sub>([🇺🇸 EN](assets/encoder_comparison/en/README.md))</sub> | 👉 **[단계별 1:1 대조 (C1~C4)](assets/compare/ko/README.md)**<br><sub>([🇺🇸 EN](assets/compare/en/README.md))</sub> | 👉 **[수식·코드 심층 분석 (9장)](assets/deepdive/ko/README.md)**<br><sub>([🇺🇸 EN](assets/deepdive/en/README.md))</sub> |
 
 ---
 

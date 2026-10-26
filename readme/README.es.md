@@ -18,10 +18,10 @@
 
 ## 🖼️ Guías Visuales y Comparativas en Profundidad (Haz clic para ver las presentaciones)
 
-| 🟢 Explicación Visual Sencilla (5 Diapositivas) | ⚖️ Comparativa 1:1 FFmpeg/libwebp vs ST (C1–C4) | 🟣 Análisis Técnico y de Código (9 Diapositivas) |
-| :---: | :---: | :---: |
-| [<img src="../assets/explainer/en/explainer_en_1.png" width="270" alt="Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="270" alt="Compare Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="270" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
-| 👉 **[Ver Explicación Visual (EN)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/explainer/ko/README.md))</sub> | 👉 **[Ver Comparativa 1:1 (EN)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/compare/ko/README.md))</sub> | 👉 **[Ver Análisis Profundo (EN)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/deepdive/ko/README.md))</sub> |
+| 🟢 Explicación Visual (5 Diap.) | 📊 Matriz de 4 Codificadores GIF | ⚖️ Comparativa 1:1 (C1–C4) | 🟣 Análisis de Código (9 Diap.) |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/explainer/en/explainer_en_1.png" width="210" alt="Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/encoder_comparison/en/encoder_compare_en.png" width="210" alt="4-Encoder Thumbnail">](../assets/encoder_comparison/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="210" alt="Compare Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="210" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
+| 👉 **[Explicación Visual (EN)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 KO](../assets/explainer/ko/README.md))</sub> | 👉 **[Comparativa de 4 Codificadores (EN)](../assets/encoder_comparison/en/README.md)**<br><sub>([🇰🇷 KO](../assets/encoder_comparison/ko/README.md))</sub> | 👉 **[Comparativa 1:1 (EN)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 KO](../assets/compare/ko/README.md))</sub> | 👉 **[Análisis Profundo (EN)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 KO](../assets/deepdive/ko/README.md))</sub> |
 
 ---
 

@@ -18,10 +18,10 @@
 
 ## 🖼️ 视觉化原理解析与深度对比图集（点击缩略图查看完整图集）
 
-| 🟢 通俗原理解析（5页） | ⚖️ 传统编码器 vs ST 1:1 实测对比（C1–C4） | 🟣 开发者与工程师代码级深度解析（9页） |
-| :---: | :---: | :---: |
-| [<img src="../assets/explainer/en/explainer_en_1.png" width="270" alt="Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="270" alt="Compare Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="270" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
-| 👉 **[查看原理解析图集 (EN)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/explainer/ko/README.md))</sub> | 👉 **[查看 1:1 对比图集 (EN)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/compare/ko/README.md))</sub> | 👉 **[查看代码深度解析 (EN)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 한국어](../assets/deepdive/ko/README.md))</sub> |
+| 🟢 通俗原理解析（5页） | 📊 四大 GIF 编码器全景对比 | ⚖️ 传统编码器 vs ST 1:1 对比（C1–C4） | 🟣 代码级深度解析（9页） |
+| :---: | :---: | :---: | :---: |
+| [<img src="../assets/explainer/en/explainer_en_1.png" width="210" alt="Explainer Thumbnail">](../assets/explainer/en/README.md) | [<img src="../assets/encoder_comparison/en/encoder_compare_en.png" width="210" alt="4-Encoder Thumbnail">](../assets/encoder_comparison/en/README.md) | [<img src="../assets/compare/en/compare_en_1.png" width="210" alt="Compare Thumbnail">](../assets/compare/en/README.md) | [<img src="../assets/deepdive/en/deepdive_en_1.png" width="210" alt="Deep Dive Thumbnail">](../assets/deepdive/en/README.md) |
+| 👉 **[查看原理解析 (EN)](../assets/explainer/en/README.md)**<br><sub>([🇰🇷 KO](../assets/explainer/ko/README.md))</sub> | 👉 **[查看四大编码器对比 (EN)](../assets/encoder_comparison/en/README.md)**<br><sub>([🇰🇷 KO](../assets/encoder_comparison/ko/README.md))</sub> | 👉 **[查看 1:1 对比图集 (EN)](../assets/compare/en/README.md)**<br><sub>([🇰🇷 KO](../assets/compare/ko/README.md))</sub> | 👉 **[查看代码深度解析 (EN)](../assets/deepdive/en/README.md)**<br><sub>([🇰🇷 KO](../assets/deepdive/ko/README.md))</sub> |
 
 ---
 
