@@ -16,7 +16,11 @@ that persists between consecutive frames keeps its representative colour.
      alternate row by row and leave 1-px stripes on thick lines.
 Options (`oct=` dict, all optional):
   leaves (2048), motion_w (3.0), lam (1.0, extra cost for collapsing nodes of the previous cut),
-  grow (4), grow_tol (11), cut ("level" | "global"), dither (True).
+  grow (4), grow_tol (11), cut ("level" | "global"), dither (True),
+  keep_est ("prevcut" | "v3"): which colours the keep decision assumes a refreshed pixel would get. "prevcut" maps
+  the target to the previous frame's cut, i.e. colours that can actually appear on the canvas. "v3" uses v3's
+  256-colour global palette, the behaviour before 2026-10-30. That palette never matches canvas colours, so its
+  "same colour -> keep" test was dead and the refresh gain was misjudged.
   Research switches for ablations: stab, keep, coalesce (all True).
 """
 import time
@@ -30,7 +34,8 @@ from .st_gif_codec import (BAYER_4X4, build_motion_weighted_palette_and_lut, qua
                            coalesce_lzw_horizontal_runs, map_quality_to_st_gif_params, frame_delays_cs,
                            resample_to_gif_rate)
 
-OCT = {"leaves": 2048, "lam": 1.0, "motion_w": 3.0, "grow": 4, "grow_tol": 11, "cut": "level", "dither": True}
+OCT = {"leaves": 2048, "lam": 1.0, "motion_w": 3.0, "grow": 4, "grow_tol": 11, "cut": "level", "keep_est": "prevcut",
+       "dither": True}
 W8 = np.array([1.0, 1.15, 0.85], np.float32)          # channel weights for nearest-colour mapping
 B = 6                      # bits per channel of the finest grid
 G = 1 << B
@@ -251,14 +256,16 @@ def encode_st_gif_octree(frames, durations_ms=33, quality=75, oct=None, progress
     if not cfg.get("stab", True):
         stab = [f.copy() for f in frames]
         motion = [np.ones(frames[0].shape[:2], bool)] + [max_channel_u8(cv2.absdiff(frames[t], frames[t - 1])) > 3 for t in range(1, len(frames))]
-    palette, lut3d = build_motion_weighted_palette_and_lut(stab, motion, num_colors=p["num_colors"])
+    palette = lut3d = None
+    if cfg["keep_est"] == "v3":
+        palette, lut3d = build_motion_weighted_palette_and_lut(stab, motion, num_colors=p["num_colors"])
     bayer = np.tile(BAYER_4X4, (H // 4 + 1, W // 4 + 1))[:H, :W]
     if progress_callback:
         progress_callback(0.25, "2/4 클립 전체 옥트리 코드북 생성 중...")
     oc = OctCut(stab, motion, cfg["leaves"], cfg["motion_w"])
 
     canvas = np.zeros((H, W, 3), np.uint8)
-    subframes = []; prev_cut = set()
+    subframes = []; prev_cut = set(); prev_tree = prev_pal = None
     stats = {"colors": []}
     for t in range(T):
         f = stab[t]
@@ -275,8 +282,12 @@ def encode_st_gif_octree(frames, durations_ms=33, quality=75, oct=None, progress
             if bb is not None:
                 x0, y0, x1, y1 = bb
                 tgt = f[y0:y1, x0:x1]; mot = active[y0:y1, x0:x1]; can = canvas[y0:y1, x0:x1]
-                nidx = quantize_frame_with_locked_bayer(tgt, lut3d, palette, bayer[y0:y1, x0:x1], dither)
-                nrgb = palette[nidx]
+                if cfg["keep_est"] == "v3":
+                    nidx = quantize_frame_with_locked_bayer(tgt, lut3d, palette, bayer[y0:y1, x0:x1], dither)
+                    nrgb = palette[nidx]
+                else:
+                    _, ii = prev_tree.query(tgt.reshape(-1, 3).astype(np.float32) * W8, k=1)
+                    nrgb = prev_pal[ii].reshape(tgt.shape)
                 e_old = max_channel_u8(cv2.absdiff(tgt, can)); e_new = max_channel_u8(cv2.absdiff(tgt, nrgb))
                 keep = (~mot) | np.all(nrgb == can, axis=2) | (e_old <= keep_tol) | \
                        (e_old.astype(np.int16) - e_new.astype(np.int16) <= gain_min)
@@ -320,7 +331,7 @@ def encode_st_gif_octree(frames, durations_ms=33, quality=75, oct=None, progress
             li = np.where(qerr > 7, ld, li)
         if prev_cut:
             stats.setdefault("jac", []).append(len(cut & prev_cut) / max(1, len(cut | prev_cut)))
-        prev_cut = cut
+        prev_cut = cut; prev_tree = tree; prev_pal = pal
         stats["colors"].append(len(pal))
         idx = np.full((H, W), 255, np.uint8); idx[Wm] = li.astype(np.uint8)
         lpal = np.zeros((256, 3), np.uint8); lpal[:len(pal)] = pal
@@ -336,6 +347,6 @@ def encode_st_gif_octree(frames, durations_ms=33, quality=75, oct=None, progress
                           "transparent": t > 0, "dispose": 1, "palette": lpal, "n_colors": len(pal)})
     if progress_callback:
         progress_callback(0.97, "4/4 GIF89a 조립 중...")
-    gif = assemble_gif89a_lct(W, H, palette, subframes, loop_count=0)
+    gif = assemble_gif89a_lct(W, H, palette, subframes, loop_count=0)   # palette None -> no global table
     encode_st_gif_octree.last_stats = {"mean_colors": float(np.mean(stats["colors"])), "frames": len(subframes), "cut_jaccard": float(np.mean(stats.get("jac", [1.0])))}
     return gif, (time.perf_counter() - t0) * 1000.0

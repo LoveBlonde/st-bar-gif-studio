@@ -110,11 +110,15 @@ def assemble_gif89a(
 
 
 def assemble_gif89a_lct(canvas_w, canvas_h, palette_rgb, subframes, loop_count=0):
-    """Like assemble_gif89a, but a subframe with a "palette" (256x3 uint8) gets its own Local Color Table."""
+    """Like assemble_gif89a, but a subframe with a "palette" (256x3 uint8) gets its own Local Color Table.
+    palette_rgb=None writes no Global Color Table (every subframe must then carry a "palette")."""
     out = bytearray()
     out.extend(b"GIF89a")
-    out.extend(struct.pack("<HHBBB", canvas_w, canvas_h, 0xF7, 255, 0))
-    out.extend(palette_rgb.astype(np.uint8).tobytes())
+    if palette_rgb is None:
+        out.extend(struct.pack("<HHBBB", canvas_w, canvas_h, 0x77, 0, 0))
+    else:
+        out.extend(struct.pack("<HHBBB", canvas_w, canvas_h, 0xF7, 255, 0))
+        out.extend(palette_rgb.astype(np.uint8).tobytes())
     out.extend(b"\x21\xFF\x0BNETSCAPE2.0\x03\x01")
     out.extend(struct.pack("<H", loop_count))
     out.extend(b"\x00")
