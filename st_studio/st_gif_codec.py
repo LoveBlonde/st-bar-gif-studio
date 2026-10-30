@@ -192,16 +192,50 @@ def map_quality_to_st_gif_params(quality: int, base_sigma: float) -> dict:
     }
 
 
+def frame_delays_cs(durations_ms: list[int]) -> list[int]:
+    """GIF stores delays in 1/100 s. Rounding each frame separately accumulates error (e.g. 32 ms -> 30 ms makes the
+    clip ~7% too fast). Carry the rounding error to the next frame so the total duration tracks the source.
+    Delays below 2 cs are raised to 2 cs because browsers replace 0-1 cs with ~10 cs."""
+    out, carry = [], 0.0
+    for d in durations_ms:
+        exact = d / 10.0 + carry
+        cs = max(2, int(round(exact)))
+        carry = exact - cs
+        out.append(cs)
+    return out
+
+
+def resample_to_gif_rate(frames: list, durations_ms: list[int], min_ms: int = 20):
+    """GIF cannot show a frame for less than 2 cs. For sources faster than 50 fps keep a frame only when it starts on
+    or after the next 20 ms slot, so the clip keeps its real duration instead of playing slower."""
+    if all(d >= min_ms for d in durations_ms):
+        return frames, durations_ms
+    starts = np.concatenate([[0.0], np.cumsum(durations_ms[:-1], dtype=np.float64)])
+    end = float(np.sum(durations_ms))
+    keep, slot = [], 0.0
+    for i, t0 in enumerate(starts):
+        if t0 + 1e-6 >= slot:
+            keep.append(i)
+            while slot <= t0 + 1e-6:
+                slot += min_ms
+    kept_starts = [starts[i] for i in keep] + [end]
+    new_d = [kept_starts[k + 1] - kept_starts[k] for k in range(len(keep))]
+    return [frames[i] for i in keep], new_d
+
+
 def encode_st_gif(
     frames: list[np.ndarray],
     durations_ms: list[int] | int = 33,
     quality: int = 75,
     mode: str | None = None,
     progress_callback=None,
+    timing: str = "source",
 ) -> tuple[bytes, float]:
     """
     Full ST-GIF v3 Optimization Pipeline with continuous quality slider (1..100).
     If `mode` ('high_quality', 'balanced', 'compact') is passed, maps it to quality (90, 75, 45).
+    `timing`: "source" (default) keeps every frame's original duration, including irregular capture intervals;
+    "uniform" spreads the same total duration evenly over all frames for smoother playback of jittery recordings.
     """
     t0 = time.perf_counter()
     T = len(frames)
@@ -209,6 +243,13 @@ def encode_st_gif(
 
     if isinstance(durations_ms, int):
         durations_ms = [durations_ms] * T
+    if timing == "uniform":
+        durations_ms = [sum(durations_ms) / T] * T
+    elif timing != "source":
+        raise ValueError(f"timing must be 'source' or 'uniform', got {timing!r}")
+    frames, durations_ms = resample_to_gif_rate(frames, list(durations_ms))
+    T = len(frames)
+    delays_cs = frame_delays_cs(durations_ms)
 
     if mode == "high_quality":
         quality = 90
@@ -256,7 +297,7 @@ def encode_st_gif(
             "w": W,
             "h": H,
             "indices": idx0,
-            "delay_cs": max(2, int(round(durations_ms[0] / 10.0))),
+            "delay_cs": delays_cs[0],
             "transparent": False,
             "dispose": 1,
         }
@@ -268,7 +309,7 @@ def encode_st_gif(
 
         f_curr = stab_frames[t]
         m_mask = motion_masks[t]
-        delay_cs = max(2, int(round(durations_ms[t] / 10.0)))
+        delay_cs = delays_cs[t]
 
         drift_err = max_channel_u8(cv2.absdiff(f_curr, canvas_rgb))
         active_mask = m_mask | (drift_err > max(14, voronoi_keep_tol * 2))

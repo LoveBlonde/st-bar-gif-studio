@@ -4,6 +4,7 @@ Spatio-Temporal Block-Aligned Stabilization, LZW-RDO GIF89a & Animated WebP Comp
 """
 
 from .st_gif_codec import encode_st_gif
+from .st_gif_octree import encode_st_gif_octree
 from .st_bar_webp import encode_st_bar_webp
 
-__all__ = ["encode_st_gif", "encode_st_bar_webp"]
+__all__ = ["encode_st_gif", "encode_st_gif_octree", "encode_st_bar_webp"]

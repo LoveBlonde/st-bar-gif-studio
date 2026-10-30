@@ -789,8 +789,10 @@ class STBarGifStudioApp(ctk.CTk):
             if ext in (".webp", ".gif", ".png", ".apng"):
                 im = Image.open(path)
                 while True:
-                    durs.append(max(15, int(im.info.get("duration", 33))))
+                    # Load first: Pillow's WebP plugin sets info["duration"] only on load (else it is
+                    # the previous frame's duration).
                     frames.append(np.array(im.convert("RGB")))
+                    durs.append(max(15, int(im.info.get("duration", 33) or 33)))
                     im.seek(im.tell() + 1)
             else:
                 cap = cv2.VideoCapture(path)
@@ -983,8 +985,8 @@ class STBarGifStudioApp(ctk.CTk):
                 dec_f, dec_d = [], []
                 try:
                     while True:
-                        dec_d.append(max(15, int(im.info.get("duration", 30))))
                         dec_f.append(np.array(im.convert("RGB")))
+                        dec_d.append(max(15, int(im.info.get("duration", 30) or 30)))
                         im.seek(im.tell() + 1)
                 except EOFError:
                     pass

@@ -11,7 +11,7 @@ import numpy as np
 import cv2
 from PIL import Image
 
-from st_studio import encode_st_gif, encode_st_bar_webp
+from st_studio import encode_st_gif, encode_st_gif_octree, encode_st_bar_webp
 
 
 def load_sequence_cli(path: str, max_frames: int = 500):
@@ -21,8 +21,10 @@ def load_sequence_cli(path: str, max_frames: int = 500):
         im = Image.open(path)
         try:
             while len(frames) < max_frames:
-                durs.append(max(15, int(im.info.get("duration", 33))))
+                # Load the frame first: Pillow's WebP plugin sets info["duration"] only when a frame is
+                # loaded, so reading it before convert() returns the PREVIOUS frame's duration.
                 frames.append(np.array(im.convert("RGB")))
+                durs.append(max(15, int(im.info.get("duration", 33) or 33)))
                 im.seek(im.tell() + 1)
         except EOFError:
             pass
@@ -47,6 +49,12 @@ def main():
     parser.add_argument("-i", "--input", help="Input video/animation file (.webp, .gif, .mp4, .webm)")
     parser.add_argument("-o", "--output", help="Output file path (.gif or .webp)")
     parser.add_argument("-q", "--quality", type=int, default=75, help="Compression quality slider (1..100, default: 75)")
+    parser.add_argument("--uniform-timing", action="store_true",
+                        help="GIF only: spread the clip's total duration evenly over its frames (smoother playback of "
+                             "recordings with irregular frame intervals). Default keeps the source timing.")
+    parser.add_argument("--engine", choices=("v3", "octree"), default="v3",
+                        help="GIF only: 'v3' = one global palette (default); 'octree' = clip-wide octree codebook with "
+                             "per-frame local colour tables (experimental, usually higher quality at the same size).")
     args = parser.parse_args()
 
     if not args.input:
@@ -68,7 +76,8 @@ def main():
     if out_ext == ".webp":
         blob, ms = encode_st_bar_webp(frames, durs, quality=args.quality)
     else:
-        blob, ms = encode_st_gif(frames, durs, quality=args.quality)
+        enc = encode_st_gif_octree if args.engine == "octree" else encode_st_gif
+        blob, ms = enc(frames, durs, quality=args.quality, timing="uniform" if args.uniform_timing else "source")
 
     with open(out_path, "wb") as f:
         f.write(blob)

@@ -107,3 +107,45 @@ def assemble_gif89a(
     # 5. GIF Trailer
     out.extend(b"\x3B")
     return bytes(out)
+
+
+def assemble_gif89a_lct(canvas_w, canvas_h, palette_rgb, subframes, loop_count=0):
+    """Like assemble_gif89a, but a subframe with a "palette" (256x3 uint8) gets its own Local Color Table.
+    palette_rgb=None writes no Global Color Table (every subframe must then carry a "palette")."""
+    out = bytearray()
+    out.extend(b"GIF89a")
+    if palette_rgb is None:
+        out.extend(struct.pack("<HHBBB", canvas_w, canvas_h, 0x77, 0, 0))
+    else:
+        out.extend(struct.pack("<HHBBB", canvas_w, canvas_h, 0xF7, 255, 0))
+        out.extend(palette_rgb.astype(np.uint8).tobytes())
+    out.extend(b"\x21\xFF\x0BNETSCAPE2.0\x03\x01")
+    out.extend(struct.pack("<H", loop_count))
+    out.extend(b"\x00")
+    for sf in subframes:
+        x, y, w, h = sf["x"], sf["y"], sf["w"], sf["h"]
+        delay_cs = max(2, int(sf["delay_cs"]))
+        trans_flag = 1 if sf.get("transparent", True) else 0
+        dispose = sf.get("dispose", 1)
+        trans_idx = sf.get("transparent_index", 255)
+        out.extend(struct.pack("<BBBBHB", 0x21, 0xF9, 0x04, ((dispose & 0x07) << 2) | trans_flag, delay_cs, trans_idx))
+        out.extend(b"\x00")
+        lct = sf.get("palette")
+        ind = sf["indices"]
+        if lct is not None:
+            # smallest power-of-two table that holds the used colours + 1 transparent slot
+            k = max(1, int(np.ceil(np.log2(sf.get("n_colors", 255) + 1))))
+            size = 1 << k
+            tix = size - 1
+            if trans_flag and tix != trans_idx:
+                ind = np.where(ind == trans_idx, tix, ind).astype(np.uint8)
+                out[-2] = tix                      # patch transparent index in the GCE just written
+            table = np.zeros((size, 3), np.uint8)
+            table[:min(size, 256)] = np.asarray(lct, dtype=np.uint8).reshape(256, 3)[:size]
+            out.extend(struct.pack("<BHHHHB", 0x2C, x, y, w, h, 0x80 | (k - 1)))
+            out.extend(table.tobytes())
+        else:
+            out.extend(struct.pack("<BHHHHB", 0x2C, x, y, w, h, 0x00))
+        out.extend(extract_gif_lzw_image_data(ind))
+    out.extend(b"\x3B")
+    return bytes(out)
